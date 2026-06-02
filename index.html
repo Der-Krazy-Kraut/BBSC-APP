@@ -224,6 +224,7 @@
     border: 1px solid var(--border);
   }
 
+  /* Slider Styling */
   input[type=range] {
     -webkit-appearance: none;
     width: 100%;
@@ -254,6 +255,7 @@
     border: 1px solid var(--border);
   }
 
+  /* Segmented Controls & Chips */
   .segmented-control {
     display: flex;
     background: var(--border);
@@ -306,6 +308,7 @@
     font-weight: bold;
   }
 
+  /* Grade Grid */
   .grade-container {
     display: flex;
     flex-wrap: wrap;
@@ -314,7 +317,7 @@
     margin-bottom: 16px;
   }
   .grade-btn {
-    width: calc(100% / 6 - 10px);
+    width: calc(100% / 6 - 10px); /* Fit 6 on a row */
     aspect-ratio: 1;
     border-radius: 10px;
     display: flex;
@@ -367,7 +370,7 @@
 <div id="deleteThemeModal" class="modal-overlay hidden">
   <div class="modal-content" style="border-color: #ef4444;">
     <h2 class="text-xl font-bold mb-4 text-center text-red-500">Thema löschen?</h2>
-    <p class="text-sm text-gray-400 mb-6 text-center">Bist du sicher? Die Kategorie verschwindet aus der Liste.</p>
+    <p class="text-sm text-gray-400 mb-6 text-center">Bist du sicher? Alle Biere bleiben in deinem Profil erhalten, aber die Kategorie verschwindet aus der Liste.</p>
     <div class="flex gap-2">
       <button onclick="document.getElementById('deleteThemeModal').classList.add('hidden')" class="flex-1 p-3 bg-slate-700 rounded-lg font-bold text-white">Abbrechen</button>
       <button id="confirmDeleteThemeBtn" class="flex-1 p-3 bg-red-600 rounded-lg font-bold text-white">Ja, löschen</button>
@@ -416,11 +419,9 @@
 <!-- LOGIN / REGISTER MODAL -->
 <div id="loginModal" class="modal-overlay hidden">
   <div class="modal-content">
-    <h2 id="authTitle" class="text-xl font-bold mb-2 text-center text-white flex justify-center items-center gap-2">
-      <i class="ph ph-sign-in"></i> Login
-    </h2>
+    <h2 id="authTitle" class="text-xl font-bold mb-2 text-center">Login 🍻</h2>
     <p id="authSubtitle" class="text-sm text-gray-400 mb-6 text-center">Melde dich an, um mit dem Tasting zu beginnen.</p>
-    
+   
     <form id="authForm">
       <div id="nameField" class="mb-4 hidden">
         <label>Dein Anzeigename</label>
@@ -436,12 +437,22 @@
       </div>
       <button type="submit" id="authBtn" class="btn-primary">Einloggen</button>
     </form>
-    
+   
     <div class="mt-5 text-center">
-      <button type="button" id="toggleAuthMode" class="text-sm font-semibold bg-transparent border-none cursor-pointer" style="color: var(--accent);">
+      <button type="button" id="toggleAuthMode" class="text-sm text-[#7dd3fc] hover:text-white font-semibold bg-transparent border-none cursor-pointer">
         Noch kein Konto? Hier registrieren.
       </button>
     </div>
+  </div>
+</div>
+
+<!-- APPROVAL MODAL (WARTESCHLANGE) -->
+<div id="approvalModal" class="modal-overlay hidden">
+  <div class="modal-content text-center">
+    <div class="text-5xl mb-4 text-[#7dd3fc]"><i class="ph ph-hourglass-high"></i></div>
+    <h2 class="text-xl font-bold mb-2 text-white">Warte auf Freigabe</h2>
+    <p class="text-sm text-gray-400 mb-6">Dein Account wurde erstellt! Aus Sicherheitsgründen muss der Admin diesen Account erst freischalten. Versuch es später noch einmal.</p>
+    <button onclick="logout()" class="btn-primary" style="background-color: var(--border); color: var(--text-main); box-shadow: none;">Ausloggen & Warten</button>
   </div>
 </div>
 
@@ -449,9 +460,8 @@
 <header id="appHeader" class="flex justify-between items-center">
   <div class="flex flex-col items-start gap-1">
     <h1 id="headerTitle" class="tracking-wide">BBSC Denkendorf</h1>
-    <div class="user-badge hover:bg-slate-700 transition-colors" id="currentUserBadge" onclick="logout()">
+    <div class="user-badge hover:bg-slate-700 transition-colors" id="currentUserBadge" onclick="openProfile()">
       <span class="text-xs"><i class="ph ph-user"></i></span> <span id="displayUserName">...</span>
-      <span class="ml-2 text-[10px] text-slate-400 flex items-center gap-1"><i class="ph ph-sign-out"></i> Logout</span>
     </div>
   </div>
   <!-- LOGO Oben Rechts -->
@@ -824,9 +834,8 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
   import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-  import { getFirestore, collection, addDoc, updateDoc, onSnapshot, query, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, updateDoc, onSnapshot, query, deleteDoc, doc, serverTimestamp, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-// HIER DEINEN FIREBASE-CODE EINFÜGEN
 const firebaseConfig = {
   apiKey: "AIzaSyB2bye9GBhZ_p1gs4qLvIxGemoR9RKYcPc",
   authDomain: "biertasting-bbsc.firebaseapp.com",
@@ -842,6 +851,7 @@ const firebaseConfig = {
   let isLoginMode = true;
   
   let beers = [];
+  let themes = [];
   let blogPosts = [];
   
   let currentThemeId = null;
@@ -890,6 +900,11 @@ const firebaseConfig = {
   }
 
   async function initFirebase() {
+      if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "mock") {
+          showError("Bitte öffne den Code auf deinem PC und ersetze den 'firebaseConfig' Block mit deinem echten Firebase-Schlüssel.");
+          return;
+      }
+
       try {
           app = initializeApp(firebaseConfig);
           db = getFirestore(app);
@@ -900,19 +915,42 @@ const firebaseConfig = {
           const savedEmail = localStorage.getItem('tastingSavedEmail');
           if (savedEmail) document.getElementById('authEmail').value = savedEmail;
 
-          onAuthStateChanged(auth, (user) => {
+          onAuthStateChanged(auth, async (user) => {
               if (user && user.displayName) {
-                  currentUserUid = user.uid;
-                  currentUserName = user.displayName;
-                  displayUserName.innerText = currentUserName;
-                  loginModal.classList.add('hidden');
-                  showView('list');
-                  listenToThemes();
-                  listenToBlog();
+                  // Sicherheits-Check: Ist der Nutzer vom Admin freigegeben?
+                  const userDocRef = doc(db, 'users', user.uid);
+                  const userDoc = await getDoc(userDocRef);
+
+                  if (!userDoc.exists()) {
+                      // Neuer User (oder erstes Mal nach Update) -> Warteschlange
+                      await setDoc(userDocRef, {
+                          name: user.displayName,
+                          email: user.email,
+                          approved: false,
+                          createdAt: serverTimestamp()
+                      });
+                      document.getElementById('approvalModal').classList.remove('hidden');
+                      loginModal.classList.add('hidden');
+                  } else if (userDoc.data().approved === true) {
+                      // User ist freigegeben -> App laden!
+                      currentUserUid = user.uid;
+                      currentUserName = user.displayName;
+                      displayUserName.innerText = currentUserName;
+                      loginModal.classList.add('hidden');
+                      document.getElementById('approvalModal').classList.add('hidden');
+                      showView('list');
+                      listenToThemes();
+                      listenToBlog();
+                  } else {
+                      // User existiert, aber wurde vom Admin noch nicht auf 'true' gesetzt
+                      document.getElementById('approvalModal').classList.remove('hidden');
+                      loginModal.classList.add('hidden');
+                  }
               } else if (!user) {
                   currentUserUid = null;
                   currentUserName = "";
                   loginModal.classList.remove('hidden');
+                  document.getElementById('approvalModal').classList.add('hidden');
                   listView.classList.add('hidden');
                   formView.classList.add('hidden');
                   blogView.classList.add('hidden');
@@ -965,25 +1003,20 @@ const firebaseConfig = {
       try {
           if (isLoginMode) {
               await signInWithEmailAndPassword(auth, email, password);
+              // onAuthStateChanged übernimmt ab hier!
           } else {
               const name = document.getElementById('regName').value.trim();
               const userCredential = await createUserWithEmailAndPassword(auth, email, password);
               await updateProfile(userCredential.user, { displayName: name });
-              
-              currentUserUid = userCredential.user.uid;
-              currentUserName = name;
-              displayUserName.innerText = currentUserName;
-              loginModal.classList.add('hidden');
-              showView('list');
-              listenToThemes();
-              listenToBlog();
+              // onAuthStateChanged übernimmt ab hier und setzt den Status auf "approved: false"!
           }
-          
+         
           localStorage.setItem('tastingSavedEmail', email);
           document.getElementById('authPassword').value = '';
-          
+         
       } catch (error) {
           showError(translateAuthError(error.code));
+      } finally {
           btn.disabled = false;
           btn.innerText = isLoginMode ? "Einloggen" : "Konto erstellen";
       }
@@ -991,8 +1024,79 @@ const firebaseConfig = {
 
   window.logout = async function() {
       if(!auth) return;
-      try { await signOut(auth); } catch (error) { console.error("Logout Error:", error); }
+      try { 
+        await signOut(auth);
+        document.getElementById('profileModal').classList.add('hidden');
+      } catch (error) { console.error("Logout Error:", error); }
   };
+
+  // Profile Modal Logic
+  window.openProfile = function() {
+      document.getElementById('profileNameDisplay').innerText = currentUserName;
+      const myBeers = beers.filter(b => b.userId === currentUserUid);
+      const container = document.getElementById('profileBeersList');
+      container.innerHTML = '';
+
+      if (myBeers.length === 0) {
+          container.innerHTML = '<p class="text-sm text-slate-400 text-center py-4">Noch keine Biere bewertet.</p>';
+      } else {
+          // Group by themeId
+          const grouped = {};
+          myBeers.forEach(b => {
+              if(!grouped[b.themeId]) grouped[b.themeId] = [];
+              grouped[b.themeId].push(b);
+          });
+
+          for (const [tId, tBeers] of Object.entries(grouped)) {
+              const tObj = themes.find(t => t.id === tId);
+              const tName = tObj ? tObj.name : 'Gelöschtes Thema';
+
+              const groupDiv = document.createElement('div');
+              groupDiv.className = 'bg-slate-800 rounded-lg border border-slate-700 overflow-hidden mb-3 shadow-md';
+              
+              const headerBtn = document.createElement('button');
+              headerBtn.className = 'w-full flex justify-between items-center p-3 font-bold text-white bg-slate-700/50 hover:bg-slate-700 transition-colors';
+              headerBtn.innerHTML = `<span class="flex items-center gap-2"><i class="ph ph-folder text-[var(--accent)]"></i> ${tName} <span class="text-xs text-slate-400 font-normal ml-2">(${tBeers.length} Biere)</span></span> <span class="text-slate-400 transition-transform"><i class="ph ph-caret-down"></i></span>`;
+              
+              const listDiv = document.createElement('div');
+              listDiv.className = 'hidden flex flex-col gap-2 p-3 bg-slate-800 border-t border-slate-700/50';
+
+              tBeers.forEach(b => {
+                  let rawNote = parseFloat(b.gesamtnote);
+                  if(isNaN(rawNote)) rawNote = 3.0;
+                  const note = rawNote.toFixed(1);
+                  let noteColor = "var(--accent)";
+                  if(rawNote <= 1.5) noteColor = "#10b981";
+                  else if(rawNote <= 2.5) noteColor = "#34d399";
+                  else if(rawNote <= 3.5) noteColor = "#facc15";
+                  else if(rawNote <= 4.5) noteColor = "#fb923c";
+                  else noteColor = "#ef4444";
+
+                  const bDiv = document.createElement('div');
+                  bDiv.className = 'flex justify-between items-center border-b border-slate-700/50 pb-2 last:border-0 last:pb-0';
+                  bDiv.innerHTML = `
+                      <div>
+                          <div class="font-bold text-sm text-white flex items-center gap-1"><i class="ph ph-beer-bottle text-slate-400"></i> ${b.name || 'Unbekannt'}</div>
+                          <div class="text-[10px] text-slate-400 pl-4">${b.brewery || ''}</div>
+                      </div>
+                      <div class="text-[10px] font-bold px-2 py-1 rounded" style="background-color: ${noteColor}; color: #0f172a;">Note: ${note}</div>
+                  `;
+                  listDiv.appendChild(bDiv);
+              });
+
+              headerBtn.onclick = () => {
+                  listDiv.classList.toggle('hidden');
+                  const icon = headerBtn.querySelector('span:last-child');
+                  icon.style.transform = listDiv.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+              };
+
+              groupDiv.appendChild(headerBtn);
+              groupDiv.appendChild(listDiv);
+              container.appendChild(groupDiv);
+          }
+      }
+      document.getElementById('profileModal').classList.remove('hidden');
+  }
 
   window.showView = function(view) {
       if (view === 'list') {
@@ -1046,7 +1150,7 @@ const firebaseConfig = {
           const themeSelector = document.getElementById('themeSelector');
           themeSelector.innerHTML = '';
           
-          let themes = [];
+          themes = [];
           snapshot.forEach(doc => themes.push({id: doc.id, ...doc.data()}));
           themes.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
           
@@ -1075,7 +1179,7 @@ const firebaseConfig = {
 
   document.getElementById('themeSelector').addEventListener('change', (e) => {
       currentThemeId = e.target.value;
-      listenToGroupBeers();
+      listenToGroupBeers(); // Falls wir die Filterlogik server-seitig belassen
   });
 
   document.getElementById('saveThemeBtn').addEventListener('click', async () => {
@@ -1250,9 +1354,10 @@ const firebaseConfig = {
       unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
           loadingIndicator.classList.add('hidden');
           beers = [];
+          // Wir laden ALLE Biere, nicht nur die vom aktuellen Thema. 
+          // So können wir die Historie im Profil sauber aufbauen und die Suche auf alle Biere anwenden.
           snapshot.forEach(doc => {
-              const data = doc.data();
-              if (data.themeId === currentThemeId) beers.push({ id: doc.id, ...data });
+              beers.push({ id: doc.id, ...doc.data() });
           });
           beers.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
           renderBeers();
@@ -1286,13 +1391,27 @@ const firebaseConfig = {
   }
 
   function renderBeers() {
-      let filteredBeers = filterMyBeers ? beers.filter(b => b.userId === currentUserUid) : beers;
+      // 1. Zuerst nach dem AKTUELLEN Thema filtern (oder bei Suche alles durchsuchen)
+      let filteredBeers = beers.filter(b => b.themeId === currentThemeId);
       
+      // 2. Dann Tab-Filter (Alle vs Meine)
+      if (filterMyBeers) {
+          filteredBeers = filteredBeers.filter(b => b.userId === currentUserUid);
+      }
+      
+      // 3. Dann Such-Filter (Suche durchsucht auch Themen-Namen)
       if (currentSearchQuery) {
-          filteredBeers = filteredBeers.filter(b => {
+          // Wenn gesucht wird, heben wir die Themen-Bindung auf, damit man über alle Tastings suchen kann
+          let searchPool = filterMyBeers ? beers.filter(b => b.userId === currentUserUid) : beers;
+          
+          filteredBeers = searchPool.filter(b => {
+              const themeObj = themes.find(t => t.id === b.themeId);
+              const themeName = themeObj ? themeObj.name : '';
+              
               const searchString = `
-                ${b.name || ''} ${b.brewery || ''} ${b.type || ''} ${b.userName || ''}
+                ${b.name || ''} ${b.brewery || ''} ${b.type || ''} ${b.userName || ''} ${themeName}
               `.toLowerCase();
+              
               let dateStr = "";
               if(b.createdAt) {
                   dateStr = b.createdAt.toDate().toLocaleDateString('de-DE');
@@ -1336,6 +1455,10 @@ const firebaseConfig = {
           const beerColor = getBeerColor(beer.farbe || 5.5);
           const gefaessText = beer.gefaess || "Flasche";
           const etikettText = getEtikettText(beer.etikett || 5);
+          
+          // Theme Flag Name
+          const themeObj = themes.find(t => t.id === beer.themeId);
+          const themeFlagName = themeObj ? themeObj.name : 'Gelöschtes Thema';
 
           const card = document.createElement('div');
           card.className = 'beer-card relative overflow-hidden';
@@ -1346,6 +1469,7 @@ const firebaseConfig = {
               
               <div class="card-header pr-20 relative z-0">
                   <div class="w-full">
+                      <span class="text-[10px] font-bold px-2 py-0.5 rounded border mb-2 inline-block flex items-center gap-1 w-max" style="border-color: var(--accent); color: var(--accent); background: rgba(125,211,252,0.1);"><i class="ph ph-folder"></i> ${themeFlagName}</span>
                       <div class="rater-name mb-1"><i class="ph ph-user"></i> ${beer.userName}</div>
                       <h3 class="font-bold text-xl leading-tight m-0 text-white">${beer.name || 'Ohne Name'}</h3>
                       <p class="text-sm text-slate-400 mt-1">
