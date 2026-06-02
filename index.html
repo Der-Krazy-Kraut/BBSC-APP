@@ -478,6 +478,23 @@
   </div>
 </div>
 
+<!-- RANKING MODAL -->
+<div id="rankingModal" class="modal-overlay hidden">
+  <div class="modal-content max-h-[85vh] flex flex-col">
+    <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-3">
+      <h2 class="text-xl font-bold text-white flex items-center gap-2">
+        🏆 <span id="rankingThemeName">Ranking</span>
+      </h2>
+      <button onclick="document.getElementById('rankingModal').classList.add('hidden')" class="text-slate-400 hover:text-white text-3xl leading-none">&times;</button>
+    </div>
+    <div class="text-xs text-slate-400 mb-4 text-center">Durchschnittliche Schulnote (1.0 = Bester Platz)</div>
+    
+    <div class="overflow-y-auto pr-1 flex-1 space-y-3" id="rankingList">
+      <!-- Ranking wird hier eingefügt -->
+    </div>
+  </div>
+</div>
+
 <!-- HEADER -->
 <header id="appHeader" class="flex justify-between items-center">
   <div class="flex flex-col items-start gap-1">
@@ -510,10 +527,15 @@
     <input type="text" id="searchInput" placeholder="Suchen nach Bier, Sorte, Datum..." class="w-full pl-10 p-3 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder-slate-500">
   </div>
 
-  <!-- FILTER: ALLE vs MEINE -->
-  <div class="flex gap-2 mb-4 bg-slate-800 p-1 rounded-lg border border-slate-700">
-    <button id="tabAllBeers" class="flex-1 py-2 text-sm font-bold rounded-md bg-slate-700 text-white shadow-sm transition-all">Alle Bewertungen</button>
-    <button id="tabMyBeers" class="flex-1 py-2 text-sm font-bold rounded-md text-slate-400 hover:text-white transition-all">Nur Meine</button>
+  <!-- FILTER: ALLE vs MEINE & RANKING -->
+  <div class="flex gap-2 mb-4">
+    <div class="flex flex-1 gap-1 bg-slate-800 p-1 rounded-lg border border-slate-700">
+      <button id="tabAllBeers" class="flex-1 py-2 text-sm font-bold rounded-md bg-slate-700 text-white shadow-sm transition-all">Alle</button>
+      <button id="tabMyBeers" class="flex-1 py-2 text-sm font-bold rounded-md text-slate-400 hover:text-white transition-all">Meine</button>
+    </div>
+    <button onclick="openRanking()" class="text-slate-900 px-4 rounded-lg font-bold shadow transition-all flex items-center justify-center gap-2" style="background-color: #f59e0b;">
+      🏆 Ranking
+    </button>
   </div>
 
   <!-- STATS -->
@@ -873,7 +895,7 @@ const firebaseConfig = {
   let isLoginMode = true;
   
   let beers = [];
-  let themes = [];
+  let themes = []; // NEU HINZUGEFÜGT FÜR DAS RANKING
   let blogPosts = [];
   
   let currentThemeId = null;
@@ -939,12 +961,10 @@ const firebaseConfig = {
 
           onAuthStateChanged(auth, async (user) => {
               if (user && user.displayName) {
-                  // Sicherheits-Check: Ist der Nutzer vom Admin freigegeben?
                   const userDocRef = doc(db, 'users', user.uid);
                   const userDoc = await getDoc(userDocRef);
 
                   if (!userDoc.exists()) {
-                      // Neuer User (oder erstes Mal nach Update) -> Warteschlange
                       await setDoc(userDocRef, {
                           name: user.displayName,
                           email: user.email,
@@ -954,7 +974,6 @@ const firebaseConfig = {
                       document.getElementById('approvalModal').classList.remove('hidden');
                       loginModal.classList.add('hidden');
                   } else if (userDoc.data().approved === true) {
-                      // User ist freigegeben -> App laden!
                       currentUserUid = user.uid;
                       currentUserName = user.displayName;
                       displayUserName.innerText = currentUserName;
@@ -964,7 +983,6 @@ const firebaseConfig = {
                       listenToThemes();
                       listenToBlog();
                   } else {
-                      // User existiert, aber wurde vom Admin noch nicht auf 'true' gesetzt
                       document.getElementById('approvalModal').classList.remove('hidden');
                       loginModal.classList.add('hidden');
                   }
@@ -1025,12 +1043,10 @@ const firebaseConfig = {
       try {
           if (isLoginMode) {
               await signInWithEmailAndPassword(auth, email, password);
-              // onAuthStateChanged übernimmt ab hier!
           } else {
               const name = document.getElementById('regName').value.trim();
               const userCredential = await createUserWithEmailAndPassword(auth, email, password);
               await updateProfile(userCredential.user, { displayName: name });
-              // onAuthStateChanged übernimmt ab hier und setzt den Status auf "approved: false"!
           }
          
           localStorage.setItem('tastingSavedEmail', email);
@@ -1062,7 +1078,6 @@ const firebaseConfig = {
       if (myBeers.length === 0) {
           container.innerHTML = '<p class="text-sm text-slate-400 text-center py-4">Noch keine Biere bewertet.</p>';
       } else {
-          // Group by themeId
           const grouped = {};
           myBeers.forEach(b => {
               if(!grouped[b.themeId]) grouped[b.themeId] = [];
@@ -1119,6 +1134,81 @@ const firebaseConfig = {
       }
       document.getElementById('profileModal').classList.remove('hidden');
   }
+
+  // RANKING MODAL LOGIC
+  window.openRanking = function() {
+      if (!currentThemeId) {
+          showError("Bitte wähle zuerst ein Thema aus.");
+          return;
+      }
+      
+      const themeObj = themes.find(t => t.id === currentThemeId);
+      document.getElementById('rankingThemeName').innerText = themeObj ? themeObj.name + " Ranking" : "Ranking";
+      
+      const themeBeers = beers.filter(b => b.themeId === currentThemeId);
+      const rankingList = document.getElementById('rankingList');
+      rankingList.innerHTML = '';
+      
+      if (themeBeers.length === 0) {
+          rankingList.innerHTML = '<p class="text-slate-400 text-center py-4">Noch keine Biere in diesem Thema bewertet.</p>';
+          document.getElementById('rankingModal').classList.remove('hidden');
+          return;
+      }
+      
+      // Gruppieren nach Name (ignoriert Groß-/Kleinschreibung und Leerzeichen)
+      const grouped = {};
+      themeBeers.forEach(b => {
+          const rawName = b.name || 'Unbekannt';
+          const key = rawName.trim().toLowerCase();
+          if (!grouped[key]) {
+              grouped[key] = { name: rawName.trim(), totalScore: 0, count: 0, type: b.type };
+          }
+          grouped[key].totalScore += parseFloat(b.gesamtnote) || 3.0;
+          grouped[key].count += 1;
+      });
+      
+      // Durchschnitt berechnen
+      const results = Object.values(grouped).map(g => {
+          return { ...g, avg: g.totalScore / g.count };
+      });
+      
+      // Sortieren (Aufsteigend, weil 1.0 = Bester Platz)
+      results.sort((a, b) => a.avg - b.avg);
+      
+      results.forEach((r, index) => {
+          let placeIcon = `<span class="text-slate-500 font-bold">${index + 1}.</span>`;
+          if (index === 0) placeIcon = "🥇";
+          if (index === 1) placeIcon = "🥈";
+          if (index === 2) placeIcon = "🥉";
+          
+          const avgDisplay = r.avg.toFixed(2);
+          
+          let noteColor = "var(--accent)";
+          if(r.avg <= 1.5) noteColor = "#10b981";
+          else if(r.avg <= 2.5) noteColor = "#34d399";
+          else if(r.avg <= 3.5) noteColor = "#facc15";
+          else if(r.avg <= 4.5) noteColor = "#fb923c";
+          else noteColor = "#ef4444";
+          
+          const item = document.createElement('div');
+          item.className = 'bg-slate-800 p-3 rounded-lg border border-slate-700 flex justify-between items-center shadow-sm';
+          item.innerHTML = `
+              <div class="flex items-center gap-3">
+                  <div class="text-2xl w-8 text-center">${placeIcon}</div>
+                  <div>
+                      <div class="font-bold text-white text-lg leading-tight">${r.name}</div>
+                      <div class="text-xs text-slate-400">${r.type || ''} • ${r.count} Bewertung(en)</div>
+                  </div>
+              </div>
+              <div class="font-bold text-lg px-2 py-1 rounded flex items-center justify-center" style="background-color: ${noteColor}; color: ${noteColor === '#facc15' || noteColor === '#34d399' || noteColor === '#fb923c' ? '#0f172a' : 'white'}; min-width: 65px;">
+                  Ø ${avgDisplay}
+              </div>
+          `;
+          rankingList.appendChild(item);
+      });
+      
+      document.getElementById('rankingModal').classList.remove('hidden');
+  };
 
   window.showView = function(view) {
       if (view === 'list') {
@@ -1201,7 +1291,7 @@ const firebaseConfig = {
 
   document.getElementById('themeSelector').addEventListener('change', (e) => {
       currentThemeId = e.target.value;
-      listenToGroupBeers(); // Falls wir die Filterlogik server-seitig belassen
+      listenToGroupBeers(); 
   });
 
   document.getElementById('saveThemeBtn').addEventListener('click', async () => {
@@ -1376,8 +1466,6 @@ const firebaseConfig = {
       unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
           loadingIndicator.classList.add('hidden');
           beers = [];
-          // Wir laden ALLE Biere, nicht nur die vom aktuellen Thema. 
-          // So können wir die Historie im Profil sauber aufbauen und die Suche auf alle Biere anwenden.
           snapshot.forEach(doc => {
               beers.push({ id: doc.id, ...doc.data() });
           });
@@ -1413,17 +1501,13 @@ const firebaseConfig = {
   }
 
   function renderBeers() {
-      // 1. Zuerst nach dem AKTUELLEN Thema filtern (oder bei Suche alles durchsuchen)
       let filteredBeers = beers.filter(b => b.themeId === currentThemeId);
       
-      // 2. Dann Tab-Filter (Alle vs Meine)
       if (filterMyBeers) {
           filteredBeers = filteredBeers.filter(b => b.userId === currentUserUid);
       }
       
-      // 3. Dann Such-Filter (Suche durchsucht auch Themen-Namen)
       if (currentSearchQuery) {
-          // Wenn gesucht wird, heben wir die Themen-Bindung auf, damit man über alle Tastings suchen kann
           let searchPool = filterMyBeers ? beers.filter(b => b.userId === currentUserUid) : beers;
           
           filteredBeers = searchPool.filter(b => {
@@ -1478,7 +1562,6 @@ const firebaseConfig = {
           const gefaessText = beer.gefaess || "Flasche";
           const etikettText = getEtikettText(beer.etikett || 5);
           
-          // Theme Flag Name
           const themeObj = themes.find(t => t.id === beer.themeId);
           const themeFlagName = themeObj ? themeObj.name : 'Gelöschtes Thema';
 
