@@ -369,7 +369,7 @@
 <!-- THEME DELETE MODAL -->
 <div id="deleteThemeModal" class="modal-overlay hidden">
   <div class="modal-content" style="border-color: #ef4444;">
-    <h2 class="text-xl font-bold mb-4 text-center text-red-500">Thema löschen?</h2>
+    <h2 class="text-xl font-bold mb-4 text-center text-red-500">Thema wiklich löschen?</h2>
     <p class="text-sm text-gray-400 mb-6 text-center">Bist du sicher? Alle Biere bleiben in deinem Profil erhalten, aber die Kategorie verschwindet aus der Liste.</p>
     <div class="flex gap-2">
       <button onclick="document.getElementById('deleteThemeModal').classList.add('hidden')" class="flex-1 p-3 bg-slate-700 rounded-lg font-bold text-white">Abbrechen</button>
@@ -382,7 +382,7 @@
 <div id="themeModal" class="modal-overlay hidden">
   <div class="modal-content">
     <h2 class="text-xl font-bold mb-4 text-center text-white">Neues Tasting-Thema</h2>
-    <input type="text" id="newThemeName" placeholder="z.B. Frankreich..." class="mb-6">
+    <input type="text" id="newThemeName" placeholder="z.B. Turkmenistan..." class="mb-6">
     <div class="flex gap-2">
       <button onclick="document.getElementById('themeModal').classList.add('hidden')" class="flex-1 p-3 bg-slate-700 rounded-lg font-bold text-white">Abbrechen</button>
       <button id="saveThemeBtn" class="flex-1 p-3 rounded-lg font-bold" style="background-color: var(--accent); color: var(--bg-color);">Speichern</button>
@@ -686,6 +686,7 @@
     <label>Hopfengeschmack (Mehrfachauswahl)</label>
     <div class="chip-container" data-target="hopfenInput">
       <div class="chip" data-val="Erdig">Erdig</div>
+      <div class="chip" data-val="Salzig">Salzig</div>
       <div class="chip" data-val="Blumig">Blumig</div>
       <div class="chip" data-val="Malzig">Malzig</div>
       <div class="chip" data-val="Kräuterlastig">Kräuterlastig</div>
