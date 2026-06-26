@@ -647,6 +647,7 @@
 
     <label>Aroma (Mehrfachauswahl)</label>
     <div class="chip-container" data-target="aromaInput">
+      <div class="chip" data-val="Nichts">Nichts</div>
       <div class="chip" data-val="Getreide">Getreide</div>
       <div class="chip" data-val="Sauer">Sauer</div>
       <div class="chip" data-val="Hefig">Hefig</div>
@@ -657,6 +658,7 @@
       <div class="chip" data-val="Muffig">Muffig</div>
       <div class="chip" data-val="Nuss">Nuss</div>
       <div class="chip" data-val="Karamell">Karamell</div>
+      <div class="chip" data-val="Malzig">Malzig</div>
       <div class="chip" data-val="Sonstiges">Sonstiges</div>
     </div>
     <input type="hidden" id="aromaInput" value="[]">
@@ -687,6 +689,7 @@
       <div class="chip" data-val="Blumig">Blumig</div>
       <div class="chip" data-val="Kräuterlastig">Kräuterlastig</div>
       <div class="chip" data-val="Würzig">Würzig</div>
+      <div class="chip" data-val="Nichts">Nichts</div>
       <div class="chip" data-val="Harzig">Harzig</div>
       <div class="chip" data-val="Zitrus">Zitrus</div>
       <div class="chip" data-val="Fruchtig">Fruchtig</div>
@@ -798,6 +801,8 @@
             <option value="Weißbier">Weißbier / Weizen</option>
             <option value="Kellerbier">Kellerbier / Zwickel</option>
             <option value="Export">Export</option>
+            <option value="Lager">Lager</option>
+            <option value="Vollbier">Vollbier</option>
             <option value="Dunkles">Dunkles</option>
             <option value="IPA">IPA (India Pale Ale)</option>
             <option value="Pale Ale">Pale Ale</option>
@@ -1492,11 +1497,11 @@ const firebaseConfig = {
 
   function getEtikettText(val) {
       val = parseFloat(val);
-      if(val === 0) return "War nicht möglich";
-      if(val === 2.5) return "Neues Kreativteam bitte!";
-      if(val === 5) return "Hat der Prakti gut gemacht";
+      if(val === 0) return "Neues Kreativteam bitte!";
+      if(val === 2.5) return "Boa, echt jetz?";
+      if(val === 5.0) return "Hat der Prakti gut gemacht";
       if(val === 7.5) return "Sehr originell";
-      if(val === 10) return "Feuchter Traum der GL";
+      if(val === 10.0) return "Feuchter Traum der GL";
       return "";
   }
 
