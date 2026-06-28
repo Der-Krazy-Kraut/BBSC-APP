@@ -1,1904 +1,655 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Beer Belly Social Club</title>
-<meta name="theme-color" content="#0f172a">
-<script src="https://cdn.tailwindcss.com"></script>
-<!-- Phosphor Icons (Flat Design) -->
-<script src="https://unpkg.com/@phosphor-icons/web"></script>
-<style>
-  :root {
-    --bg-color: #0f172a; /* Tiefes Nachtblau/Grau */
-    --card-bg: #1e293b;
-    --text-main: #f8fafc;
-    --text-sub: #94a3b8;
-    --accent: #7dd3fc; /* Pastellblau */
-    --accent-hover: #38bdf8;
-    --border: #334155;
-    --nav-height: 65px;
-  }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beer Belly Social Club - Tasting</title>
+    <!-- Phosphor Icons (Flache, professionelle Icons) -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        /* === DESIGN & FARBEN === */
+        :root {
+            --bg-dark: #121212;
+            --card-bg: #1e1e1e;
+            --accent-blue: #AEC6CF; /* Pastellblau */
+            --accent-dark: #81a4b1;
+            --text-light: #ffffff;
+            --text-muted: #9e9e9e;
+            --success: #4caf50;
+            --danger: #f44336;
+        }
 
-  html {
-    background-color: var(--bg-color);
-  }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        
+        body { background-color: var(--bg-dark); color: var(--text-light); padding-bottom: 80px; }
 
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: var(--bg-color);
-    color: var(--text-main);
-    margin: 0;
-    padding: 0;
-    padding-bottom: calc(var(--nav-height) + 20px);
-    -webkit-tap-highlight-color: transparent;
-  }
+        /* === HEADER === */
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 20px; background-color: var(--card-bg);
+            border-bottom: 1px solid #333;
+        }
+        .profile-trigger {
+            display: flex; align-items: center; gap: 8px; color: var(--accent-blue);
+            font-weight: bold; cursor: pointer; padding: 5px 10px; border-radius: 8px;
+            background: rgba(174, 198, 207, 0.1);
+        }
+        .logo { height: 40px; }
 
-  header {
-    background-color: var(--card-bg);
-    padding: 15px 20px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-    position: sticky;
-    top: 0;
-    z-index: 40;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  header h1 {
-    margin: 0;
-    font-size: 1.25rem;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    color: var(--text-main);
-  }
+        /* === BEREICHE & SCREENS === */
+        .screen { display: none; padding: 20px; }
+        .screen.active { display: block; }
 
-  .user-badge {
-    background-color: var(--border);
-    color: var(--text-main);
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    cursor: pointer;
-  }
+        /* === LOGIN & WARTESCHIRM === */
+        .auth-container { max-width: 400px; margin: 60px auto; background: var(--card-bg); padding: 30px; border-radius: 12px; text-align: center; }
+        .auth-container h2 { margin-bottom: 20px; color: var(--accent-blue); }
+        .auth-container input { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #444; background: #2a2a2a; color: white; }
+        .btn-primary { width: 100%; padding: 12px; background: var(--accent-blue); color: #000; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-danger { background: var(--danger); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; margin-top: 20px; width: 100%; }
+        
+        /* === KONTROLLEN (Filter & Ranking) === */
+        .controls { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
+        select { width: 100%; padding: 12px; border-radius: 8px; background: var(--card-bg); color: white; border: 1px solid #333; font-size: 16px; }
+        .filter-buttons { display: flex; gap: 10px; }
+        .filter-btn { flex: 1; padding: 10px; background: var(--card-bg); border: 1px solid #333; color: var(--text-muted); border-radius: 8px; cursor: pointer; }
+        .filter-btn.active { background: var(--accent-blue); color: #000; font-weight: bold; }
+        .ranking-btn { flex: 1; padding: 10px; background: linear-gradient(135deg, #ffd700, #daa520); color: #000; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; }
 
-  input, select, textarea {
-    width: 100%;
-    padding: 12px 15px;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    background-color: var(--bg-color);
-    color: var(--text-main);
-    box-sizing: border-box;
-    font-family: inherit;
-    font-size: 1rem;
-    transition: border-color 0.2s;
-  }
-  
-  input:focus, select:focus, textarea:focus {
-    outline: none;
-    border-color: var(--accent);
-  }
+        /* === BIER-KARTEN (Feed) === */
+        .beer-card { background: var(--card-bg); border-radius: 12px; padding: 15px; margin-bottom: 15px; border-left: 4px solid var(--accent-blue); }
+        .beer-header { display: flex; justify-content: space-between; margin-bottom: 10px; align-items: center; }
+        .beer-name { font-size: 18px; font-weight: bold; display: flex; align-items: center; gap: 8px; }
+        .theme-badge { background: rgba(174, 198, 207, 0.2); color: var(--accent-blue); padding: 3px 8px; border-radius: 12px; font-size: 12px; }
+        .beer-meta { display: flex; gap: 15px; color: var(--text-muted); font-size: 14px; margin-bottom: 10px; }
+        .beer-meta i { margin-right: 4px; }
+        .beer-grade { font-size: 24px; font-weight: bold; text-align: right; }
+        
+        /* Edit Buttons */
+        .edit-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 20px; padding: 5px; border-radius: 5px; }
+        .edit-btn:hover { color: var(--accent-blue); background: rgba(255,255,255,0.1); }
 
-  label {
-    display: block;
-    margin-bottom: 6px;
-    font-size: 0.9rem;
-    color: var(--text-sub);
-    font-weight: 500;
-  }
+        /* === SCHULNOTEN FARBEN === */
+        .grade-1 { color: #4caf50; } .grade-2 { color: #8bc34a; } .grade-3 { color: #cddc39; }
+        .grade-4 { color: #ffeb3b; } .grade-5 { color: #ff9800; } .grade-6 { color: #f44336; }
 
-  .btn-primary {
-    width: 100%;
-    padding: 14px;
-    background-color: var(--accent);
-    color: #0f172a; /* Dunkle Schrift auf hellem Blau */
-    border: none;
-    border-radius: 10px;
-    font-weight: 700;
-    font-size: 1.1rem;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    box-shadow: 0 4px 6px -1px rgba(125, 211, 252, 0.2);
-  }
+        /* === MODALS (Profil, Hinzufügen, Bearbeiten) === */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: flex-end; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: var(--card-bg); width: 100%; max-height: 90vh; overflow-y: auto; border-radius: 20px 20px 0 0; padding: 20px; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .close-modal { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
 
-  .btn-primary:active {
-    background-color: var(--accent-hover);
-    transform: translateY(1px);
-  }
+        /* === FORMULAR ELEMENTE === */
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; color: var(--accent-blue); }
+        .form-group input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #2a2a2a; color: white; }
+        .chip-group { display: flex; gap: 10px; flex-wrap: wrap; }
+        .chip { padding: 8px 15px; border-radius: 20px; border: 1px solid #444; background: #2a2a2a; color: var(--text-muted); cursor: pointer; }
+        .chip.active { background: var(--accent-blue); color: #000; border-color: var(--accent-blue); font-weight: bold; }
+        
+        /* Slider */
+        .slider-container { background: #2a2a2a; padding: 15px; border-radius: 8px; text-align: center; }
+        input[type=range] { width: 100%; margin-bottom: 10px; accent-color: var(--accent-blue); }
+        #sliderText, #editSliderText { font-weight: bold; color: var(--accent-blue); }
 
-  .btn-primary:disabled {
-    background-color: var(--border);
-    color: var(--text-sub);
-    box-shadow: none;
-    cursor: not-allowed;
-  }
+        /* Profil Akkordeon */
+        .accordion { background: #2a2a2a; color: white; cursor: pointer; padding: 15px; width: 100%; text-align: left; border: none; border-bottom: 1px solid #444; outline: none; font-size: 16px; transition: 0.4s; display: flex; justify-content: space-between; }
+        .accordion.active, .accordion:hover { background: #333; }
+        .panel { padding: 0 15px; background-color: var(--card-bg); display: none; overflow: hidden; }
 
-  .beer-card {
-    background-color: var(--card-bg);
-    border-radius: 16px;
-    padding: 16px;
-    margin-bottom: 16px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
-    border: 1px solid var(--border);
-    animation: fadeIn 0.3s ease-out;
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 8px;
-  }
-
-  .rater-name {
-    font-size: 0.8rem;
-    color: var(--accent);
-    font-weight: 600;
-    background: rgba(125, 211, 252, 0.1);
-    padding: 2px 8px;
-    border-radius: 12px;
-    display: inline-block;
-    margin-bottom: 4px;
-  }
-
-  .bottom-nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: var(--nav-height);
-    background-color: var(--card-bg);
-    border-top: 1px solid var(--border);
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    padding-bottom: env(safe-area-inset-bottom);
-    z-index: 50;
-  }
-
-  .nav-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-sub);
-    text-decoration: none;
-    font-size: 0.75rem;
-    font-weight: 600;
-    width: 100%;
-    height: 100%;
-    cursor: pointer;
-    transition: color 0.2s;
-  }
-
-  .nav-item.active {
-    color: var(--accent);
-  }
-
-  .nav-icon {
-    font-size: 1.5rem;
-    margin-bottom: 2px;
-  }
-  
-  .loader {
-    border: 3px solid var(--border);
-    border-top: 3px solid var(--accent);
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    animation: spin 1s linear infinite;
-    margin: 20px auto;
-  }
-  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-  .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.8);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 60;
-    backdrop-filter: blur(4px);
-  }
-  .modal-content {
-    background: var(--card-bg);
-    padding: 24px;
-    border-radius: 16px;
-    width: 90%;
-    max-width: 400px;
-    border: 1px solid var(--border);
-  }
-
-  /* Slider Styling */
-  input[type=range] {
-    -webkit-appearance: none;
-    width: 100%;
-    background: transparent;
-    margin: 10px 0;
-  }
-  input[type=range]:focus { outline: none; }
-  input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    height: 24px;
-    width: 24px;
-    border-radius: 50%;
-    background: var(--accent);
-    cursor: pointer;
-    margin-top: -8px;
-    border: 3px solid var(--card-bg);
-    box-shadow: 0 0 5px rgba(0,0,0,0.5);
-  }
-  input[type=range]::-webkit-slider-runnable-track {
-    width: 100%;
-    height: 8px;
-    cursor: pointer;
-    background: var(--border);
-    border-radius: 4px;
-  }
-  #farbeInput::-webkit-slider-runnable-track {
-    background: linear-gradient(to right, #fef08a, #f59e0b, #b45309, #451a03, #0f0f0f);
-    border: 1px solid var(--border);
-  }
-
-  /* Segmented Controls & Chips */
-  .segmented-control {
-    display: flex;
-    background: var(--border);
-    border-radius: 8px;
-    padding: 4px;
-    gap: 4px;
-    margin-bottom: 12px;
-  }
-  .segment {
-    flex: 1;
-    text-align: center;
-    padding: 8px 4px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--text-sub);
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 1.1;
-  }
-  .segment.active {
-    background: var(--accent);
-    color: #0f172a;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-  }
-
-  .chip-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 12px;
-  }
-  .chip {
-    padding: 6px 12px;
-    background: var(--bg-color);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    font-size: 0.8rem;
-    color: var(--text-sub);
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .chip.active {
-    background: rgba(125, 211, 252, 0.15);
-    border-color: var(--accent);
-    color: var(--accent);
-    font-weight: bold;
-  }
-
-  /* Grade Grid */
-  .grade-container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 8px;
-    margin-bottom: 16px;
-  }
-  .grade-btn {
-    width: calc(100% / 6 - 10px); /* Fit 6 on a row */
-    aspect-ratio: 1;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1rem;
-    font-weight: bold;
-    background: var(--border);
-    color: var(--text-sub);
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  @media (max-width: 360px) {
-    .grade-btn { font-size: 0.85rem; width: calc(100% / 5 - 8px); }
-  }
-  
-  .section-title {
-    color: var(--accent);
-    font-size: 1.1rem;
-    font-weight: 700;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 6px;
-    margin-top: 24px;
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  #listView, #formView, #blogView {
-    width: 100%;
-    overflow-x: hidden;
-  }
-</style>
+        /* FAB (Floating Action Button) */
+        .fab { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background: var(--accent-blue); border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #000; font-size: 28px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); cursor: pointer; z-index: 100; border: none; }
+    </style>
 </head>
 <body>
 
-<!-- ERROR MODAL -->
-<div id="errorModal" class="modal-overlay hidden">
-  <div class="modal-content" style="border-color: #ef4444;">
-    <h2 class="text-xl font-bold mb-2 text-center text-red-500 flex justify-center items-center gap-2">
-      <i class="ph ph-warning-circle"></i> Ein Fehler ist aufgetreten
-    </h2>
-    <p id="errorMessage" class="text-sm text-gray-300 mb-6 text-center">Es gab ein Problem.</p>
-    <button onclick="document.getElementById('errorModal').classList.add('hidden')" class="btn-primary" style="background-color: #dc2626; box-shadow: none; color: white;">Schließen</button>
-  </div>
-</div>
-
-<!-- THEME DELETE MODAL -->
-<div id="deleteThemeModal" class="modal-overlay hidden">
-  <div class="modal-content" style="border-color: #ef4444;">
-    <h2 class="text-xl font-bold mb-4 text-center text-red-500">Thema wiklich löschen?</h2>
-    <p class="text-sm text-gray-400 mb-6 text-center">Bist du sicher? Alle Biere bleiben in deinem Profil erhalten, aber die Kategorie verschwindet aus der Liste.</p>
-    <div class="flex gap-2">
-      <button onclick="document.getElementById('deleteThemeModal').classList.add('hidden')" class="flex-1 p-3 bg-slate-700 rounded-lg font-bold text-white">Abbrechen</button>
-      <button id="confirmDeleteThemeBtn" class="flex-1 p-3 bg-red-600 rounded-lg font-bold text-white">Ja, löschen</button>
-    </div>
-  </div>
-</div>
-
-<!-- THEME ADD MODAL -->
-<div id="themeModal" class="modal-overlay hidden">
-  <div class="modal-content">
-    <h2 class="text-xl font-bold mb-4 text-center text-white">Neues Tasting-Thema</h2>
-    <input type="text" id="newThemeName" placeholder="z.B. Turkmenistan..." class="mb-6">
-    <div class="flex gap-2">
-      <button onclick="document.getElementById('themeModal').classList.add('hidden')" class="flex-1 p-3 bg-slate-700 rounded-lg font-bold text-white">Abbrechen</button>
-      <button id="saveThemeBtn" class="flex-1 p-3 rounded-lg font-bold" style="background-color: var(--accent); color: var(--bg-color);">Speichern</button>
-    </div>
-  </div>
-</div>
-
-<!-- BLOG ADD/EDIT MODAL -->
-<div id="blogModal" class="modal-overlay hidden">
-  <div class="modal-content">
-    <h2 id="blogModalTitle" class="text-xl font-bold mb-4 text-center text-white">Neuer Beitrag</h2>
-    
-    <label>Kategorie / Label</label>
-    <select id="blogLabelInput" class="mb-4">
-      <option value="Info">Info</option>
-      <option value="Tasting">Tasting</option>
-      <option value="Termin">Termin</option>
-      <option value="Wichtig">Wichtig</option>
-    </select>
-
-    <label>Titel</label>
-    <input type="text" id="blogTitleInput" placeholder="Titel (z.B. Nächstes Tasting)" class="mb-4">
-    
-    <label>Inhalt</label>
-    <textarea id="blogContentInput" rows="4" placeholder="Schreibe etwas für die Gruppe..." class="mb-6"></textarea>
-    
-    <div class="flex gap-2">
-      <button onclick="document.getElementById('blogModal').classList.add('hidden')" class="flex-1 p-3 bg-slate-700 rounded-lg font-bold text-white">Abbrechen</button>
-      <button id="saveBlogBtn" class="flex-1 p-3 rounded-lg font-bold" style="background-color: var(--accent); color: var(--bg-color);">Posten</button>
-    </div>
-  </div>
-</div>
-
-<!-- LOGIN / REGISTER MODAL -->
-<div id="loginModal" class="modal-overlay hidden">
-  <div class="modal-content">
-    <h2 id="authTitle" class="text-xl font-bold mb-2 text-center">Login 🍻</h2>
-    <p id="authSubtitle" class="text-sm text-gray-400 mb-6 text-center">Melde dich an, um mit dem Tasting zu beginnen.</p>
-   
-    <form id="authForm">
-      <div id="nameField" class="mb-4 hidden">
-        <label>Dein Anzeigename</label>
-        <input type="text" id="regName" placeholder="z.B. Tom..." autocomplete="off">
-      </div>
-      <div class="mb-4">
-        <label>E-Mail-Adresse</label>
-        <input type="email" id="authEmail" placeholder="mail@beispiel.de" required autocomplete="email">
-      </div>
-      <div class="mb-6">
-        <label>Passwort</label>
-        <input type="password" id="authPassword" placeholder="Mindestens 6 Zeichen" required minlength="6" autocomplete="current-password">
-      </div>
-      <button type="submit" id="authBtn" class="btn-primary">Einloggen</button>
-    </form>
-   
-    <div class="mt-5 text-center">
-      <button type="button" id="toggleAuthMode" class="text-sm text-[#7dd3fc] hover:text-white font-semibold bg-transparent border-none cursor-pointer">
-        Noch kein Konto? Hier registrieren.
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- APPROVAL MODAL (WARTESCHLANGE) -->
-<div id="approvalModal" class="modal-overlay hidden">
-  <div class="modal-content text-center">
-    <div class="text-5xl mb-4 text-[#7dd3fc]">⏳</div>
-    <h2 class="text-xl font-bold mb-2 text-white">Warte auf Freigabe</h2>
-    <p class="text-sm text-gray-400 mb-6">Dein Account wurde erstellt! Aus Sicherheitsgründen muss der Admin diesen Account erst freischalten. Versuch es später noch einmal.</p>
-    <button onclick="logout()" class="btn-primary" style="background-color: var(--border); color: var(--text-main); box-shadow: none;">Ausloggen & Warten</button>
-  </div>
-</div>
-
-<!-- PROFILE MODAL -->
-<div id="profileModal" class="modal-overlay hidden">
-  <div class="modal-content max-h-[85vh] flex flex-col">
-    <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-3">
-      <h2 class="text-xl font-bold text-white flex items-center gap-2">
-        <i class="ph ph-user text-[var(--accent)]"></i> <span id="profileNameDisplay">User</span>
-      </h2>
-      <button onclick="document.getElementById('profileModal').classList.add('hidden')" class="text-slate-400 hover:text-white text-3xl leading-none">&times;</button>
-    </div>
-    
-    <div class="text-sm text-slate-400 mb-2 uppercase tracking-wide font-bold">Deine Historie</div>
-    
-    <div class="overflow-y-auto pr-1 flex-1 mb-6 space-y-2" id="profileBeersList">
-      <!-- Hier werden die Biere vom Code eingefügt -->
-    </div>
-    
-    <button onclick="logout()" class="btn-primary mt-auto flex justify-center items-center gap-2" style="background-color: #ef4444; color: white; box-shadow: none;">
-      <i class="ph ph-sign-out"></i> Sicher ausloggen
-    </button>
-  </div>
-</div>
-
-<!-- RANKING MODAL -->
-<div id="rankingModal" class="modal-overlay hidden">
-  <div class="modal-content max-h-[85vh] flex flex-col">
-    <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-3">
-      <h2 class="text-xl font-bold text-white flex items-center gap-2">
-        🏆 <span id="rankingThemeName">Ranking</span>
-      </h2>
-      <button onclick="document.getElementById('rankingModal').classList.add('hidden')" class="text-slate-400 hover:text-white text-3xl leading-none">&times;</button>
-    </div>
-    <div class="text-xs text-slate-400 mb-4 text-center">Durchschnittliche Schulnote (1.0 = Bester Platz)</div>
-    
-    <div class="overflow-y-auto pr-1 flex-1 space-y-3" id="rankingList">
-      <!-- Ranking wird hier eingefügt -->
-    </div>
-  </div>
-</div>
-
-<!-- HEADER -->
-<header id="appHeader" class="flex justify-between items-center">
-  <div class="flex flex-col items-start gap-1">
-    <h1 id="headerTitle" class="tracking-wide">BBSC Denkendorf</h1>
-    <div class="user-badge hover:bg-slate-700 transition-colors" id="currentUserBadge" onclick="openProfile()">
-      <span class="text-xs"><i class="ph ph-user"></i></span> <span id="displayUserName">...</span>
-    </div>
-  </div>
-  <!-- LOGO Oben Rechts -->
-  <img src="Logo_BBSC_DD_2024_3.png" alt="BBSC Logo" class="h-14 w-14 object-contain rounded-full border border-slate-700 shadow-sm" onerror="this.src='https://placehold.co/100x100/1e293b/7dd3fc?text=BBSC'">
-</header>
-
-<!-- VIEW 1: LIST -->
-<div id="listView" class="p-4 hidden">
-  
-  <!-- THEME SELECTOR -->
-  <div class="flex gap-2 mb-4">
-    <select id="themeSelector" class="flex-1 p-3 rounded-lg bg-slate-800 border border-slate-700 text-white font-bold">
-      <option value="">Lade Themen...</option>
-    </select>
-    <button onclick="document.getElementById('deleteThemeModal').classList.remove('hidden')" class="bg-slate-800 border border-slate-700 hover:bg-red-900/50 text-red-400 px-4 rounded-lg font-bold transition-colors"><i class="ph ph-trash"></i></button>
-    <button onclick="document.getElementById('themeModal').classList.remove('hidden')" class="text-slate-900 px-4 rounded-lg font-bold shadow text-xl" style="background-color: var(--accent);"><i class="ph ph-plus"></i></button>
-  </div>
-
-  <!-- SUCHE -->
-  <div class="mb-4 relative">
-    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-      <i class="ph ph-magnifying-glass"></i>
-    </div>
-    <input type="text" id="searchInput" placeholder="Suchen nach Bier, Sorte, Datum..." class="w-full pl-10 p-3 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder-slate-500">
-  </div>
-
-  <!-- FILTER: ALLE vs MEINE & RANKING -->
-  <div class="flex gap-2 mb-4">
-    <div class="flex flex-1 gap-1 bg-slate-800 p-1 rounded-lg border border-slate-700">
-      <button id="tabAllBeers" class="flex-1 py-2 text-sm font-bold rounded-md bg-slate-700 text-white shadow-sm transition-all">Alle</button>
-      <button id="tabMyBeers" class="flex-1 py-2 text-sm font-bold rounded-md text-slate-400 hover:text-white transition-all">Meine</button>
-    </div>
-    <button onclick="openRanking()" class="text-slate-900 px-4 rounded-lg font-bold shadow transition-all flex items-center justify-center gap-2" style="background-color: #f59e0b;">
-      🏆 Ranking
-    </button>
-  </div>
-
-  <!-- STATS -->
-  <div class="flex justify-between items-center mb-6 bg-slate-800 p-3 rounded-lg border border-slate-700">
-    <div class="text-center w-full">
-      <div class="text-2xl font-bold" style="color: var(--accent);" id="totalBeersCount">0</div>
-      <div class="text-xs text-slate-400 uppercase tracking-wider">Angezeigte Biere</div>
-    </div>
-  </div>
-
-  <div id="loadingIndicator" class="loader hidden"></div>
-  
-  <div id="beerList" class="space-y-4">
-    <!-- Beers will be injected here -->
-  </div>
-  
-  <div id="emptyState" class="text-center py-12 hidden">
-    <div class="text-4xl mb-4 text-slate-500"><i class="ph ph-beer-bottle"></i></div>
-    <h3 class="text-lg font-bold mb-2 text-white">Hier ist noch nichts!</h3>
-    <p class="text-sm text-slate-400">Sei der Erste, der ein Bier einträgt.</p>
-  </div>
-</div>
-
-<!-- VIEW 2: FORM -->
-<div id="formView" class="p-4 hidden">
-  <form id="beerForm">
-    
-    <div class="bg-sky-900/30 border border-sky-700/50 p-3 rounded-xl mb-4 text-sm text-sky-200 flex items-start gap-2">
-      <i class="ph ph-mask-happy text-xl"></i>
-      <div><strong>Blindverkostung:</strong> Bewerte zuerst Geruch und Geschmack. Ganz unten löst du dann auf, um welches Bier es sich handelt!</div>
-    </div>
-
-    <!-- 0. GEFÄSS -->
-    <h3 class="section-title"><i class="ph ph-package"></i> Gefäß</h3>
-    <label>Getrunken aus:</label>
-    <div class="segmented-control" data-target="gefaessInput">
-      <div class="segment active" data-val="Flasche">Flasche</div>
-      <div class="segment" data-val="Dose">Dose</div>
-      <div class="segment" data-val="Glas">Glas</div>
-    </div>
-    <input type="hidden" id="gefaessInput" value="Flasche">
-
-    <!-- 1. ERSCHEINUNGSBILD -->
-    <h3 class="section-title"><i class="ph ph-eye"></i> Erscheinungsbild</h3>
-    
-    <div class="mb-5">
-      <div class="flex justify-between items-end mb-2">
-        <label class="mb-0">Farbe</label>
-        <span id="farbeValueDisplay" class="font-bold text-lg" style="color: var(--accent);">5.5</span>
-      </div>
-      <div class="flex justify-between items-center text-xs text-slate-400 mb-1">
-        <span>Hellgelb</span>
-        <span>Schwarz</span>
-      </div>
-      <input type="range" id="farbeInput" min="1" max="10" step="0.5" value="5.5" class="w-full">
-    </div>
-
-    <div class="mb-5">
-      <div class="flex justify-between items-end mb-2">
-        <label class="mb-0">Trübung</label>
-        <span id="truebungValueDisplay" class="font-bold text-lg" style="color: var(--accent);">5.5</span>
-      </div>
-      <div class="flex justify-between items-center text-xs text-slate-400 mb-1">
-        <span>Bergsee</span>
-        <span>Pinselwasser</span>
-      </div>
-      <input type="range" id="truebungInput" min="1" max="10" step="0.5" value="5.5" class="w-full">
-    </div>
-
-    <div class="mb-5">
-      <div class="flex justify-between items-end mb-2">
-        <label class="mb-0">Schaum</label>
-        <span id="schaumValueDisplay" class="font-bold text-lg" style="color: var(--accent);">5.5</span>
-      </div>
-      <div class="flex justify-between items-center text-xs text-slate-400 mb-1">
-        <span>Kölsch</span>
-        <span>Schaumparty</span>
-      </div>
-      <input type="range" id="schaumInput" min="1" max="10" step="0.5" value="5.5" class="w-full">
-    </div>
-
-    <label>Kohlensäure (Prickeln)</label>
-    <div class="segmented-control" data-target="kohlensaeureInput">
-      <div class="segment" data-val="Schwach">Schwach</div>
-      <div class="segment active" data-val="Spritzig">Spritzig</div>
-      <div class="segment" data-val="Stark">Stark</div>
-    </div>
-    <input type="hidden" id="kohlensaeureInput" value="Spritzig">
-
-
-    <!-- 2. GERUCH -->
-    <h3 class="section-title"><i class="ph ph-wind"></i> Geruch</h3>
-    
-    <label>Intensität</label>
-    <div class="segmented-control" data-target="geruchIntensitaetInput">
-      <div class="segment" data-val="Schwach">Schwach</div>
-      <div class="segment active" data-val="Mittel">Mittel</div>
-      <div class="segment" data-val="Stark">Stark</div>
-    </div>
-    <input type="hidden" id="geruchIntensitaetInput" value="Mittel">
-
-    <label>Balance</label>
-    <div class="segmented-control" data-target="geruchBalanceInput">
-      <div class="segment" data-val="Fruchtig">Fruchtig</div>
-      <div class="segment active" data-val="Neutral">Neutral</div>
-      <div class="segment" data-val="Modrig">Modrig</div>
-    </div>
-    <input type="hidden" id="geruchBalanceInput" value="Mittel">
-
-    <label>Aroma (Mehrfachauswahl)</label>
-    <div class="chip-container" data-target="aromaInput">
-      <div class="chip" data-val="Nichts">Nichts</div>
-      <div class="chip" data-val="Getreide">Getreide</div>
-      <div class="chip" data-val="Sauer">Sauer</div>
-      <div class="chip" data-val="Hefig">Hefig</div>
-      <div class="chip" data-val="Hopfig">Hopfig</div>
-      <div class="chip" data-val="Brot">Brot</div>
-      <div class="chip" data-val="Süß">Süß</div>
-      <div class="chip" data-val="Fruchtig">Fruchtig</div>
-      <div class="chip" data-val="Muffig">Muffig</div>
-      <div class="chip" data-val="Nuss">Nuss</div>
-      <div class="chip" data-val="Karamell">Karamell</div>
-      <div class="chip" data-val="Malzig">Malzig</div>
-      <div class="chip" data-val="Sonstiges">Sonstiges</div>
-    </div>
-    <input type="hidden" id="aromaInput" value="[]">
-
-
-    <!-- 3. GESCHMACK -->
-    <h3 class="section-title"><i class="ph ph-drop"></i> Geschmack</h3>
-
-    <label>Intensität</label>
-    <div class="segmented-control" data-target="geschmackIntensitaetInput">
-      <div class="segment" data-val="Schwach">Schwach</div>
-      <div class="segment active" data-val="Mittel">Mittel</div>
-      <div class="segment" data-val="Stark">Stark</div>
-    </div>
-    <input type="hidden" id="geschmackIntensitaetInput" value="Mittel">
-
-    <label>Balance</label>
-    <div class="segmented-control" data-target="geschmackBalanceInput">
-      <div class="segment" data-val="Süß">Süß</div>
-      <div class="segment active" data-val="Was dazwischen">Neutral</div>
-      <div class="segment" data-val="Bitter">Bitter</div>
-    </div>
-    <input type="hidden" id="geschmackBalanceInput" value="Was dazwischen">
-
-    <label>Hopfengeschmack (Mehrfachauswahl)</label>
-    <div class="chip-container" data-target="hopfenInput">
-      <div class="chip" data-val="Erdig">Erdig</div>
-      <div class="chip" data-val="Salzig">Salzig</div>
-      <div class="chip" data-val="Blumig">Blumig</div>
-      <div class="chip" data-val="Malzig">Malzig</div>
-      <div class="chip" data-val="Kräuterlastig">Kräuterlastig</div>
-      <div class="chip" data-val="Würzig">Würzig</div>
-      <div class="chip" data-val="Nichts">Nichts</div>
-      <div class="chip" data-val="Harzig">Harzig</div>
-      <div class="chip" data-val="Zitrus">Zitrus</div>
-      <div class="chip" data-val="Fruchtig">Fruchtig</div>
-      <div class="chip" data-val="Getreidig">Getreidig</div>
-      <div class="chip" data-val="Künstlich">Künstlich</div>
-      <div class="chip" data-val="Bananig">Bananig</div>
-      <div class="chip" data-val="Hefig">Hefig</div>
-      <div class="chip" data-val="Hopfig">Hopfig</div>
-    </div>
-    <input type="hidden" id="hopfenInput" value="[]">
-
-
-    <!-- 4. NACHGESCHMACK -->
-    <h3 class="section-title"><i class="ph ph-timer"></i> Nachgeschmack</h3>
-    
-    <label>Länge</label>
-    <div class="segmented-control" data-target="nachLaengeInput">
-      <div class="segment" data-val="Kurz">Kurz</div>
-      <div class="segment active" data-val="Mittel">Mittel</div>
-      <div class="segment" data-val="Lang">Lang</div>
-    </div>
-    <input type="hidden" id="nachLaengeInput" value="Mittel">
-
-    <label>Intensität</label>
-    <div class="segmented-control" data-target="nachIntensitaetInput">
-      <div class="segment" data-val="Schwach">Schwach</div>
-      <div class="segment active" data-val="Mittel">Mittel</div>
-      <div class="segment" data-val="Stark">Stark</div>
-    </div>
-    <input type="hidden" id="nachIntensitaetInput" value="Mittel">
-
-    <label>Balance</label>
-    <div class="segmented-control" data-target="nachBalanceInput">
-      <div class="segment" data-val="Süß">Süß</div>
-      <div class="segment active" data-val="Mittel">Mittel</div>
-      <div class="segment" data-val="Bitter">Bitter</div>
-    </div>
-    <input type="hidden" id="nachBalanceInput" value="Mittel">
-
-
-    <!-- 5. GESAMTEINDRUCK -->
-    <h3 class="section-title"><i class="ph ph-trophy"></i> Gesamteindruck</h3>
-
-    <label>Geschmack generell</label>
-    <div class="segmented-control" data-target="eindruckGeschmackInput">
-      <div class="segment" data-val="Langweilig">Langweilig</div>
-      <div class="segment active" data-val="Mittel">Mittel</div>
-      <div class="segment" data-val="Exzellent">Exzellent</div>
-    </div>
-    <input type="hidden" id="eindruckGeschmackInput" value="Mittel">
-
-    <label>Persönlicher Geschmack</label>
-    <div class="segmented-control" data-target="persGeschmackInput">
-      <div class="segment" data-val="Mag ich nicht">Mag ich nicht</div>
-      <div class="segment active" data-val="Mag ich">Mag ich</div>
-    </div>
-    <input type="hidden" id="persGeschmackInput" value="Mag ich">
-
-    <label>Frische</label>
-    <div class="segmented-control" data-target="frischeInput">
-      <div class="segment" data-val="Schlecht">Schlecht</div>
-      <div class="segment" data-val="Schal">Schal</div>
-      <div class="segment active" data-val="Frisch">Frisch</div>
-    </div>
-    <input type="hidden" id="frischeInput" value="Frisch">
-
-    <label>Katerverdächtig</label>
-    <div class="segmented-control" data-target="katerInput">
-      <div class="segment active" data-val="Niemals">Niemals</div>
-      <div class="segment" data-val="Garantiert">Garantiert</div>
-    </div>
-    <input type="hidden" id="katerInput" value="Niemals">
-
-    <!-- Schulnoten 1.0 bis 6.0 -->
-    <div class="mb-4 mt-6">
-      <label class="text-center font-bold text-lg mb-4 text-white">Gesamtnote Bier (Schulnote)</label>
-      <div class="grade-container" id="grade-buttons">
-        <!-- JS generiert die Buttons hier -->
-      </div>
-      <input type="hidden" id="gesamtnoteInput" value="3.0">
-    </div>
-
-    <div class="mb-8">
-      <label>Kurzes Fazit / Notizen</label>
-      <textarea id="notes" rows="3" placeholder="Was bleibt hängen?"></textarea>
-    </div>
-
-    <!-- 6. AUFLÖSUNG (BLINDVERKOSTUNG) -->
-    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 mb-6 shadow-lg relative overflow-hidden">
-      <div class="absolute top-0 left-0 w-full h-1" style="background: var(--accent);"></div>
-      <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
-        <i class="ph ph-warning text-red-400"></i> Auflösung
-      </h3>
-      <p class="text-xs text-slate-400 mb-4">Jetzt das Etikett anschauen und eintragen.</p>
-      
-      <div class="mb-4">
-        <label>Biername *</label>
-        <input type="text" id="beerName" required placeholder="z.B. Augustiner">
-      </div>
-      <div class="mb-4">
-        <label>Brauerei / Marke</label>
-        <input type="text" id="brewery" placeholder="z.B. Augustiner-Bräu">
-      </div>
-      <div class="grid grid-cols-2 gap-4 mb-4">
-        <div>
-          <label>Sorte</label>
-          <select id="type">
-            <option value="" disabled selected>Bitte wählen...</option>
-            <option value="Helles">Helles</option>
-            <option value="Pils">Pils</option>
-            <option value="Weißbier">Weißbier / Weizen</option>
-            <option value="Kellerbier">Kellerbier / Zwickel</option>
-            <option value="Export">Export</option>
-            <option value="Lager">Lager</option>
-            <option value="Vollbier">Vollbier</option>
-            <option value="Dunkles">Dunkles</option>
-            <option value="IPA">IPA (India Pale Ale)</option>
-            <option value="Pale Ale">Pale Ale</option>
-            <option value="Bockbier">Bockbier / Doppelbock</option>
-            <option value="Stout / Porter">Stout / Porter</option>
-            <option value="Alkoholfrei">Alkoholfrei</option>
-            <option value="Radler">Radler</option>
-            <option value="Andere">Andere</option>
-          </select>
+    <!-- LOGIN SCREEN -->
+    <div id="loginScreen" class="screen active">
+        <div class="auth-container">
+            <img src="Logo_BBSC_DD_2024_3.png" alt="Logo" style="height: 80px; margin-bottom: 20px;" onerror="this.style.display='none'">
+            <h2>BBSC Login</h2>
+            <form id="authForm" novalidate>
+                <input type="email" id="email" placeholder="E-Mail" required>
+                <input type="password" id="password" placeholder="Passwort (min. 6 Zeichen)" required>
+                <button type="submit" class="btn-primary"><i class="ph ph-sign-in"></i> Anmelden / Registrieren</button>
+            </form>
+            <p id="authError" style="color: var(--danger); margin-top: 10px; display: none;"></p>
         </div>
-        <div>
-          <label>Alkoholgehalt (%)</label>
-          <input type="number" step="0.1" id="alkohol" placeholder="z.B. 5.2">
+    </div>
+
+    <!-- WARTESCHIRM (Approval) -->
+    <div id="waitScreen" class="screen">
+        <div class="auth-container">
+            <h2><i class="ph ph-hourglass-high" style="font-size: 40px; color: var(--accent-blue);"></i></h2>
+            <h3>Warten auf Freigabe</h3>
+            <p style="margin: 15px 0; color: var(--text-muted);">Dein Account wurde angelegt. Ein Admin muss dich freischalten.</p>
+            <button id="waitLogoutBtn" class="btn-danger">Ausloggen</button>
         </div>
-      </div>
-
-      <!-- Etikett Bewertung -->
-      <div class="mb-2 mt-6 pt-4 border-t border-slate-700">
-        <label>Etikett (Layout / Idee)</label>
-        <input type="range" id="etikettInput" min="0" max="10" step="2.5" value="5" class="w-full mt-2">
-        <div id="etikettTextDisplay" class="text-center font-bold text-sm mt-2" style="color: var(--accent);">Hat der Prakti gut gemacht (5)</div>
-      </div>
     </div>
-    
-    <button type="submit" id="saveBtn" class="btn-primary mb-6 text-lg flex justify-center items-center gap-2">
-      <i class="ph ph-check-circle"></i> Bewertung abschließen
-    </button>
-  </form>
-</div>
 
-<!-- VIEW 3: BLOG / NEWS -->
-<div id="blogView" class="p-4 hidden">
-  <div class="flex justify-between items-center mb-4 bg-slate-800 p-3 rounded-lg border border-slate-700 relative">
-    <div class="text-center w-full">
-      <div class="text-2xl font-bold text-white">Pinnwand</div>
-      <div class="text-xs text-slate-400 uppercase tracking-wider">News & Ankündigungen</div>
+    <!-- HAUPT-APP -->
+    <div id="mainApp" class="screen">
+        <header>
+            <div class="profile-trigger" id="profileBtn">
+                <i class="ph ph-user"></i> <span id="headerUserName">Profil</span>
+            </div>
+            <img src="Logo_BBSC_DD_2024_3.png" alt="BBSC" class="logo" onerror="this.style.display='none'">
+        </header>
+
+        <div class="controls">
+            <select id="mainThemeSelect">
+                <option value="Frankreich (26. Juni)">Frankreich (26. Juni)</option>
+                <option value="Allgemeines Tasting">Allgemeines Tasting</option>
+            </select>
+            <div class="filter-buttons">
+                <button class="filter-btn active" id="btnFilterAll">Alle</button>
+                <button class="filter-btn" id="btnFilterMine">Meine</button>
+                <button class="ranking-btn" id="btnRanking"><i class="ph ph-trophy"></i> Ranking</button>
+            </div>
+        </div>
+
+        <div id="feed">
+            <!-- Biere werden hier geladen -->
+        </div>
+
+        <button class="fab" id="addBeerFab"><i class="ph ph-plus"></i></button>
     </div>
-    <button onclick="openBlogModal()" class="text-slate-900 w-10 h-10 flex items-center justify-center rounded-lg font-bold shadow text-xl absolute right-3" style="background-color: var(--accent);"><i class="ph ph-plus"></i></button>
-  </div>
-
-  <!-- BLOG FILTER -->
-  <div class="flex flex-wrap gap-2 mb-4 bg-slate-800 p-2 rounded-lg border border-slate-700" id="blogFilters">
-    <button class="blog-filter-btn active flex-1 py-1 px-2 text-xs font-bold rounded bg-slate-700 text-white transition-all" data-filter="Alle">Alle</button>
-    <button class="blog-filter-btn flex-1 py-1 px-2 text-xs font-bold rounded text-slate-400 hover:text-white transition-all" data-filter="Info">Info</button>
-    <button class="blog-filter-btn flex-1 py-1 px-2 text-xs font-bold rounded text-slate-400 hover:text-white transition-all" data-filter="Tasting">Tasting</button>
-    <button class="blog-filter-btn flex-1 py-1 px-2 text-xs font-bold rounded text-slate-400 hover:text-white transition-all" data-filter="Termin">Termin</button>
-  </div>
-  
-  <div id="blogLoadingIndicator" class="loader hidden"></div>
-  
-  <div id="blogList" class="space-y-4">
-    <!-- Blog posts will be injected here -->
-  </div>
-  
-  <div id="blogEmptyState" class="text-center py-12 hidden">
-    <div class="text-4xl mb-4 text-slate-500"><i class="ph ph-newspaper"></i></div>
-    <h3 class="text-lg font-bold mb-2 text-white">Noch keine Beiträge!</h3>
-    <p class="text-sm text-slate-400">Schreibe die erste News für die Gruppe.</p>
-  </div>
-</div>
-
-<!-- BOTTOM NAVIGATION -->
-<nav class="bottom-nav">
-  <div class="nav-item active" id="navHome" onclick="showView('list')">
-    <span class="nav-icon"><i class="ph ph-beer-bottle"></i></span>
-    <span>Feed</span>
-  </div>
-  <div class="nav-item" id="navAdd" onclick="showView('form')">
-    <span class="nav-icon"><i class="ph ph-plus-circle"></i></span>
-    <span>Eintragen</span>
-  </div>
-  <div class="nav-item" id="navBlog" onclick="showView('blog')">
-    <span class="nav-icon"><i class="ph ph-article"></i></span>
-    <span>News</span>
-  </div>
-</nav>
-
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-  import { getFirestore, collection, addDoc, updateDoc, onSnapshot, query, deleteDoc, doc, serverTimestamp, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyB2bye9GBhZ_p1gs4qLvIxGemoR9RKYcPc",
-  authDomain: "biertasting-bbsc.firebaseapp.com",
-  projectId: "biertasting-bbsc",
-  storageBucket: "biertasting-bbsc.firebasestorage.app",
-  messagingSenderId: "547730661062",
-  appId: "1:547730661062:web:ac340d8467ffe5323d41c7"
-};
-
-  let app, db, auth;
-  let currentUserUid = null;
-  let currentUserName = "";
-  let isLoginMode = true;
-  
-  let beers = [];
-  let themes = []; // NEU HINZUGEFÜGT FÜR DAS RANKING
-  let blogPosts = [];
-  
-  let currentThemeId = null;
-  let currentEditBeerId = null;
-  let currentEditBlogId = null;
-  
-  let filterMyBeers = false;
-  let currentBlogFilter = 'Alle';
-  let currentSearchQuery = '';
-  
-  let unsubscribeSnapshot = null;
-  let unsubscribeThemes = null;
-  let unsubscribeBlog = null;
-
-  const listView = document.getElementById('listView');
-  const formView = document.getElementById('formView');
-  const blogView = document.getElementById('blogView');
-  const loginModal = document.getElementById('loginModal');
-  const errorModal = document.getElementById('errorModal');
-  const errorMessage = document.getElementById('errorMessage');
-  const headerTitle = document.getElementById('headerTitle');
-  const navHome = document.getElementById('navHome');
-  const navAdd = document.getElementById('navAdd');
-  const navBlog = document.getElementById('navBlog');
-  const beerListEl = document.getElementById('beerList');
-  const emptyState = document.getElementById('emptyState');
-  const loadingIndicator = document.getElementById('loadingIndicator');
-  const displayUserName = document.getElementById('displayUserName');
-  const tabAll = document.getElementById('tabAllBeers');
-  const tabMine = document.getElementById('tabMyBeers');
-  const searchInput = document.getElementById('searchInput');
-
-  function showError(msg) {
-      errorMessage.innerText = msg;
-      errorModal.classList.remove('hidden');
-  }
-
-  function translateAuthError(code) {
-      switch(code) {
-          case 'auth/invalid-credential': return "E-Mail oder Passwort ist falsch.";
-          case 'auth/email-already-in-use': return "Diese E-Mail wird bereits verwendet.";
-          case 'auth/weak-password': return "Das Passwort ist zu schwach (min. 6 Zeichen).";
-          case 'auth/invalid-email': return "Die E-Mail-Adresse ist ungültig.";
-          default: return "Fehler bei der Anmeldung (" + code + ").";
-      }
-  }
-
-  async function initFirebase() {
-      if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "mock") {
-          showError("Bitte öffne den Code auf deinem PC und ersetze den 'firebaseConfig' Block mit deinem echten Firebase-Schlüssel.");
-          return;
-      }
-
-      try {
-          app = initializeApp(firebaseConfig);
-          db = getFirestore(app);
-          auth = getAuth(app);
-
-          await setPersistence(auth, browserLocalPersistence);
-
-          const savedEmail = localStorage.getItem('tastingSavedEmail');
-          if (savedEmail) document.getElementById('authEmail').value = savedEmail;
-
-          onAuthStateChanged(auth, async (user) => {
-              if (user && user.displayName) {
-                  const userDocRef = doc(db, 'users', user.uid);
-                  const userDoc = await getDoc(userDocRef);
-
-                  if (!userDoc.exists()) {
-                      await setDoc(userDocRef, {
-                          name: user.displayName,
-                          email: user.email,
-                          approved: false,
-                          createdAt: serverTimestamp()
-                      });
-                      document.getElementById('approvalModal').classList.remove('hidden');
-                      loginModal.classList.add('hidden');
-                  } else if (userDoc.data().approved === true) {
-                      currentUserUid = user.uid;
-                      currentUserName = user.displayName;
-                      displayUserName.innerText = currentUserName;
-                      loginModal.classList.add('hidden');
-                      document.getElementById('approvalModal').classList.add('hidden');
-                      showView('list');
-                      listenToThemes();
-                      listenToBlog();
-                  } else {
-                      document.getElementById('approvalModal').classList.remove('hidden');
-                      loginModal.classList.add('hidden');
-                  }
-              } else if (!user) {
-                  currentUserUid = null;
-                  currentUserName = "";
-                  loginModal.classList.remove('hidden');
-                  document.getElementById('approvalModal').classList.add('hidden');
-                  listView.classList.add('hidden');
-                  formView.classList.add('hidden');
-                  blogView.classList.add('hidden');
-                  if (unsubscribeSnapshot) { unsubscribeSnapshot(); unsubscribeSnapshot = null; }
-                  if (unsubscribeThemes) { unsubscribeThemes(); unsubscribeThemes = null; }
-                  if (unsubscribeBlog) { unsubscribeBlog(); unsubscribeBlog = null; }
-              }
-          });
-      } catch (error) {
-          console.error("Firebase Init Error:", error);
-          showError("Verbindung zur Datenbank fehlgeschlagen.");
-      }
-  }
-
-  document.getElementById('toggleAuthMode').addEventListener('click', () => {
-      isLoginMode = !isLoginMode;
-      const nameField = document.getElementById('nameField');
-      const regName = document.getElementById('regName');
-      const authTitle = document.getElementById('authTitle');
-      const authSubtitle = document.getElementById('authSubtitle');
-      const authBtn = document.getElementById('authBtn');
-      const toggleAuthMode = document.getElementById('toggleAuthMode');
-
-      if (isLoginMode) {
-          nameField.classList.add('hidden');
-          regName.removeAttribute('required');
-          authTitle.innerHTML = '<i class="ph ph-sign-in"></i> Login';
-          authSubtitle.innerText = "Melde dich an, um mit dem Tasting zu beginnen.";
-          authBtn.innerText = "Einloggen";
-          toggleAuthMode.innerText = "Noch kein Konto? Hier registrieren.";
-      } else {
-          nameField.classList.remove('hidden');
-          regName.setAttribute('required', 'true');
-          authTitle.innerHTML = '<i class="ph ph-user-plus"></i> Registrieren';
-          authSubtitle.innerText = "Erstelle ein Profil für deine Bewertungen.";
-          authBtn.innerText = "Konto erstellen";
-          toggleAuthMode.innerText = "Bereits ein Konto? Hier einloggen.";
-      }
-  });
-
-  document.getElementById('authForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = document.getElementById('authEmail').value.trim();
-      const password = document.getElementById('authPassword').value;
-      const btn = document.getElementById('authBtn');
-      
-      btn.disabled = true;
-      btn.innerText = "Einen Moment... ⏳";
-
-      try {
-          if (isLoginMode) {
-              await signInWithEmailAndPassword(auth, email, password);
-          } else {
-              const name = document.getElementById('regName').value.trim();
-              const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-              await updateProfile(userCredential.user, { displayName: name });
-          }
-         
-          localStorage.setItem('tastingSavedEmail', email);
-          document.getElementById('authPassword').value = '';
-         
-      } catch (error) {
-          showError(translateAuthError(error.code));
-      } finally {
-          btn.disabled = false;
-          btn.innerText = isLoginMode ? "Einloggen" : "Konto erstellen";
-      }
-  });
-
-  window.logout = async function() {
-      if(!auth) return;
-      try { 
-        await signOut(auth);
-        document.getElementById('profileModal').classList.add('hidden');
-      } catch (error) { console.error("Logout Error:", error); }
-  };
-
-  // Profile Modal Logic
-  window.openProfile = function() {
-      document.getElementById('profileNameDisplay').innerText = currentUserName;
-      const myBeers = beers.filter(b => b.userId === currentUserUid);
-      const container = document.getElementById('profileBeersList');
-      container.innerHTML = '';
-
-      if (myBeers.length === 0) {
-          container.innerHTML = '<p class="text-sm text-slate-400 text-center py-4">Noch keine Biere bewertet.</p>';
-      } else {
-          const grouped = {};
-          myBeers.forEach(b => {
-              if(!grouped[b.themeId]) grouped[b.themeId] = [];
-              grouped[b.themeId].push(b);
-          });
-
-          for (const [tId, tBeers] of Object.entries(grouped)) {
-              const tObj = themes.find(t => t.id === tId);
-              const tName = tObj ? tObj.name : 'Gelöschtes Thema';
-
-              const groupDiv = document.createElement('div');
-              groupDiv.className = 'bg-slate-800 rounded-lg border border-slate-700 overflow-hidden mb-3 shadow-md';
-              
-              const headerBtn = document.createElement('button');
-              headerBtn.className = 'w-full flex justify-between items-center p-3 font-bold text-white bg-slate-700/50 hover:bg-slate-700 transition-colors';
-              headerBtn.innerHTML = `<span class="flex items-center gap-2"><i class="ph ph-folder text-[var(--accent)]"></i> ${tName} <span class="text-xs text-slate-400 font-normal ml-2">(${tBeers.length} Biere)</span></span> <span class="text-slate-400 transition-transform"><i class="ph ph-caret-down"></i></span>`;
-              
-              const listDiv = document.createElement('div');
-              listDiv.className = 'hidden flex flex-col gap-2 p-3 bg-slate-800 border-t border-slate-700/50';
-
-              tBeers.forEach(b => {
-                  let rawNote = parseFloat(b.gesamtnote);
-                  if(isNaN(rawNote)) rawNote = 3.0;
-                  const note = rawNote.toFixed(1);
-                  let noteColor = "var(--accent)";
-                  if(rawNote <= 1.5) noteColor = "#10b981";
-                  else if(rawNote <= 2.5) noteColor = "#34d399";
-                  else if(rawNote <= 3.5) noteColor = "#facc15";
-                  else if(rawNote <= 4.5) noteColor = "#fb923c";
-                  else noteColor = "#ef4444";
-
-                  const bDiv = document.createElement('div');
-                  bDiv.className = 'flex justify-between items-center border-b border-slate-700/50 pb-2 last:border-0 last:pb-0';
-                  bDiv.innerHTML = `
-                      <div>
-                          <div class="font-bold text-sm text-white flex items-center gap-1"><i class="ph ph-beer-bottle text-slate-400"></i> ${b.name || 'Unbekannt'}</div>
-                          <div class="text-[10px] text-slate-400 pl-4">${b.brewery || ''}</div>
-                      </div>
-                      <div class="text-[10px] font-bold px-2 py-1 rounded" style="background-color: ${noteColor}; color: #0f172a;">Note: ${note}</div>
-                  `;
-                  listDiv.appendChild(bDiv);
-              });
-
-              headerBtn.onclick = () => {
-                  listDiv.classList.toggle('hidden');
-                  const icon = headerBtn.querySelector('span:last-child');
-                  icon.style.transform = listDiv.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
-              };
-
-              groupDiv.appendChild(headerBtn);
-              groupDiv.appendChild(listDiv);
-              container.appendChild(groupDiv);
-          }
-      }
-      document.getElementById('profileModal').classList.remove('hidden');
-  }
-
-  // RANKING MODAL LOGIC
-  window.openRanking = function() {
-      if (!currentThemeId) {
-          showError("Bitte wähle zuerst ein Thema aus.");
-          return;
-      }
-      
-      const themeObj = themes.find(t => t.id === currentThemeId);
-      document.getElementById('rankingThemeName').innerText = themeObj ? themeObj.name + " Ranking" : "Ranking";
-      
-      const themeBeers = beers.filter(b => b.themeId === currentThemeId);
-      const rankingList = document.getElementById('rankingList');
-      rankingList.innerHTML = '';
-      
-      if (themeBeers.length === 0) {
-          rankingList.innerHTML = '<p class="text-slate-400 text-center py-4">Noch keine Biere in diesem Thema bewertet.</p>';
-          document.getElementById('rankingModal').classList.remove('hidden');
-          return;
-      }
-      
-      // Gruppieren nach Name (ignoriert Groß-/Kleinschreibung und Leerzeichen)
-      const grouped = {};
-      themeBeers.forEach(b => {
-          const rawName = b.name || 'Unbekannt';
-          const key = rawName.trim().toLowerCase();
-          if (!grouped[key]) {
-              grouped[key] = { name: rawName.trim(), totalScore: 0, count: 0, type: b.type };
-          }
-          grouped[key].totalScore += parseFloat(b.gesamtnote) || 3.0;
-          grouped[key].count += 1;
-      });
-      
-      // Durchschnitt berechnen
-      const results = Object.values(grouped).map(g => {
-          return { ...g, avg: g.totalScore / g.count };
-      });
-      
-      // Sortieren (Aufsteigend, weil 1.0 = Bester Platz)
-      results.sort((a, b) => a.avg - b.avg);
-      
-      results.forEach((r, index) => {
-          let placeIcon = `<span class="text-slate-500 font-bold">${index + 1}.</span>`;
-          if (index === 0) placeIcon = "🥇";
-          if (index === 1) placeIcon = "🥈";
-          if (index === 2) placeIcon = "🥉";
-          
-          const avgDisplay = r.avg.toFixed(2);
-          
-          let noteColor = "var(--accent)";
-          if(r.avg <= 1.5) noteColor = "#10b981";
-          else if(r.avg <= 2.5) noteColor = "#34d399";
-          else if(r.avg <= 3.5) noteColor = "#facc15";
-          else if(r.avg <= 4.5) noteColor = "#fb923c";
-          else noteColor = "#ef4444";
-          
-          const item = document.createElement('div');
-          item.className = 'bg-slate-800 p-3 rounded-lg border border-slate-700 flex justify-between items-center shadow-sm';
-          item.innerHTML = `
-              <div class="flex items-center gap-3">
-                  <div class="text-2xl w-8 text-center">${placeIcon}</div>
-                  <div>
-                      <div class="font-bold text-white text-lg leading-tight">${r.name}</div>
-                      <div class="text-xs text-slate-400">${r.type || ''} • ${r.count} Bewertung(en)</div>
-                  </div>
-              </div>
-              <div class="font-bold text-lg px-2 py-1 rounded flex items-center justify-center" style="background-color: ${noteColor}; color: ${noteColor === '#facc15' || noteColor === '#34d399' || noteColor === '#fb923c' ? '#0f172a' : 'white'}; min-width: 65px;">
-                  Ø ${avgDisplay}
-              </div>
-          `;
-          rankingList.appendChild(item);
-      });
-      
-      document.getElementById('rankingModal').classList.remove('hidden');
-  };
-
-  window.showView = function(view) {
-      if (view === 'list') {
-          listView.classList.remove('hidden'); formView.classList.add('hidden'); blogView.classList.add('hidden');
-          headerTitle.innerText = "BBSC Denkendorf";
-          navHome.classList.add('active'); navAdd.classList.remove('active'); navBlog.classList.remove('active');
-      } else if (view === 'form') {
-          listView.classList.add('hidden'); formView.classList.remove('hidden'); blogView.classList.add('hidden');
-          headerTitle.innerText = "Neues Bier";
-          navHome.classList.remove('active'); navAdd.classList.add('active'); navBlog.classList.remove('active');
-      } else if (view === 'blog') {
-          listView.classList.add('hidden'); formView.classList.add('hidden'); blogView.classList.remove('hidden');
-          headerTitle.innerText = "Pinnwand";
-          navHome.classList.remove('active'); navAdd.classList.remove('active'); navBlog.classList.add('active');
-      }
-  };
-
-  tabAll.addEventListener('click', () => {
-      filterMyBeers = false;
-      tabAll.classList.add('bg-slate-700', 'text-white', 'shadow-sm');
-      tabAll.classList.remove('text-slate-400');
-      tabMine.classList.remove('bg-slate-700', 'text-white', 'shadow-sm');
-      tabMine.classList.add('text-slate-400');
-      renderBeers();
-  });
-
-  tabMine.addEventListener('click', () => {
-      filterMyBeers = true;
-      tabMine.classList.add('bg-slate-700', 'text-white', 'shadow-sm');
-      tabMine.classList.remove('text-slate-400');
-      tabAll.classList.remove('bg-slate-700', 'text-white', 'shadow-sm');
-      tabAll.classList.add('text-slate-400');
-      renderBeers();
-  });
-  
-  if(searchInput) {
-      searchInput.addEventListener('input', (e) => {
-          currentSearchQuery = e.target.value.toLowerCase();
-          renderBeers();
-      });
-  }
-
-  function listenToThemes() {
-      if (!currentUserUid) return;
-      const themesRef = collection(db, 'tastings');
-      const q = query(themesRef);
-      
-      if (unsubscribeThemes) unsubscribeThemes();
-
-      unsubscribeThemes = onSnapshot(q, (snapshot) => {
-          const themeSelector = document.getElementById('themeSelector');
-          themeSelector.innerHTML = '';
-          
-          themes = [];
-          snapshot.forEach(doc => themes.push({id: doc.id, ...doc.data()}));
-          themes.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
-          
-          if (themes.length === 0) {
-              themeSelector.innerHTML = '<option value="">Kein Thema vorhanden</option>';
-              currentThemeId = null;
-              beers = [];
-              renderBeers();
-              return;
-          }
-
-          themes.forEach(t => {
-              const opt = document.createElement('option');
-              opt.value = t.id;
-              opt.innerText = t.name;
-              themeSelector.appendChild(opt);
-          });
-
-          const previouslySelected = themeSelector.value;
-          currentThemeId = themes.find(t => t.id === previouslySelected) ? previouslySelected : themes[0].id;
-          themeSelector.value = currentThemeId;
-          
-          listenToGroupBeers();
-      });
-  }
-
-  document.getElementById('themeSelector').addEventListener('change', (e) => {
-      currentThemeId = e.target.value;
-      listenToGroupBeers(); 
-  });
-
-  document.getElementById('saveThemeBtn').addEventListener('click', async () => {
-      const input = document.getElementById('newThemeName');
-      const name = input.value.trim();
-      if (!name) return;
-      
-      try {
-          await addDoc(collection(db, 'tastings'), { name: name, createdAt: serverTimestamp() });
-          input.value = '';
-          document.getElementById('themeModal').classList.add('hidden');
-      } catch (error) { showError("Konnte Thema nicht speichern."); }
-  });
-
-  document.getElementById('confirmDeleteThemeBtn').addEventListener('click', async () => {
-      if(!currentThemeId) return;
-      try {
-          await deleteDoc(doc(db, 'tastings', currentThemeId));
-          document.getElementById('deleteThemeModal').classList.add('hidden');
-      } catch (error) { showError("Konnte Thema nicht löschen."); }
-  });
-
-  function listenToBlog() {
-      if (!currentUserUid) return;
-      const blogLoadingIndicator = document.getElementById('blogLoadingIndicator');
-      blogLoadingIndicator.classList.remove('hidden');
-
-      const q = query(collection(db, 'blog'));
-      if (unsubscribeBlog) unsubscribeBlog();
-
-      unsubscribeBlog = onSnapshot(q, (snapshot) => {
-          blogLoadingIndicator.classList.add('hidden');
-          blogPosts = [];
-          snapshot.forEach((doc) => blogPosts.push({ id: doc.id, ...doc.data() }));
-          blogPosts.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
-          renderBlog();
-      }, (error) => {
-          blogLoadingIndicator.classList.add('hidden');
-          showError("Fehler beim Laden der Beiträge.");
-      });
-  }
-
-  document.querySelectorAll('.blog-filter-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-          document.querySelectorAll('.blog-filter-btn').forEach(b => {
-              b.classList.remove('bg-slate-700', 'text-white', 'active');
-              b.classList.add('text-slate-400');
-          });
-          e.target.classList.remove('text-slate-400');
-          e.target.classList.add('bg-slate-700', 'text-white', 'active');
-          currentBlogFilter = e.target.dataset.filter;
-          renderBlog();
-      });
-  });
-
-  function renderBlog() {
-      const blogListEl = document.getElementById('blogList');
-      const blogEmptyState = document.getElementById('blogEmptyState');
-      
-      let filteredPosts = currentBlogFilter === 'Alle' ? blogPosts : blogPosts.filter(p => p.label === currentBlogFilter);
-
-      if (filteredPosts.length === 0) {
-          blogEmptyState.classList.remove('hidden'); blogListEl.innerHTML = ''; return;
-      }
-      blogEmptyState.classList.add('hidden'); blogListEl.innerHTML = '';
-
-      filteredPosts.forEach((post) => {
-          let dateStr = "Gerade eben";
-          if (post.createdAt) {
-              const date = post.createdAt.toDate();
-              dateStr = date.toLocaleDateString('de-DE', {day: '2-digit', month: '2-digit', year: 'numeric'}) + ', ' + date.toLocaleTimeString('de-DE', {hour: '2-digit', minute:'2-digit'}) + ' Uhr';
-          }
-          let editStr = "";
-          if (post.updatedAt) {
-              const editDate = post.updatedAt.toDate();
-              editStr = `<span class="italic">(Bearbeitet: ${editDate.toLocaleDateString('de-DE')} ${editDate.toLocaleTimeString('de-DE', {hour: '2-digit', minute:'2-digit'})})</span>`;
-          }
-
-          const isMyPost = post.userId === currentUserUid;
-          const labelColor = post.label === 'Wichtig' ? 'bg-red-500/20 text-red-400 border-red-500/50' : 'bg-slate-700 text-[var(--accent)] border-slate-600';
-
-          const card = document.createElement('div');
-          card.className = 'beer-card';
-          card.innerHTML = `
-              <div class="card-header border-b border-slate-700 pb-2 mb-3">
-                  <div class="w-full">
-                      <div class="flex justify-between items-start">
-                          <span class="text-[10px] font-bold px-2 py-0.5 rounded border ${labelColor} mb-2 inline-block">${post.label || 'Info'}</span>
-                          ${isMyPost ? `
-                            <div class="flex gap-2">
-                              <button onclick="editBlogPost('${post.id}')" class="text-slate-500 hover:text-[var(--accent)] p-1 text-sm"><i class="ph ph-pencil-simple"></i></button>
-                              <button onclick="deleteBlogPost('${post.id}')" class="text-slate-500 hover:text-red-500 p-1 text-sm"><i class="ph ph-trash"></i></button>
-                            </div>` : ''}
-                      </div>
-                      <h3 class="font-bold text-xl text-white mb-1">${post.title}</h3>
-                      <div class="rater-name"><i class="ph ph-user"></i> ${post.userName}</div>
-                  </div>
-              </div>
-              <div class="text-slate-300 text-sm whitespace-pre-wrap leading-relaxed">${post.content}</div>
-              <div class="mt-4 flex justify-between items-center text-xs text-slate-500">
-                  <span>${dateStr}</span>
-                  <span>${editStr}</span>
-              </div>
-          `;
-          blogListEl.appendChild(card);
-      });
-  }
-
-  window.openBlogModal = function() {
-      currentEditBlogId = null;
-      document.getElementById('blogModalTitle').innerText = "Neuer Beitrag";
-      document.getElementById('blogTitleInput').value = '';
-      document.getElementById('blogContentInput').value = '';
-      document.getElementById('blogLabelInput').value = 'Info';
-      document.getElementById('blogModal').classList.remove('hidden');
-  };
-
-  window.editBlogPost = function(id) {
-      const post = blogPosts.find(p => p.id === id);
-      if(!post) return;
-      currentEditBlogId = id;
-      document.getElementById('blogModalTitle').innerText = "Beitrag bearbeiten";
-      document.getElementById('blogTitleInput').value = post.title || '';
-      document.getElementById('blogContentInput').value = post.content || '';
-      document.getElementById('blogLabelInput').value = post.label || 'Info';
-      document.getElementById('blogModal').classList.remove('hidden');
-  };
-
-  document.getElementById('saveBlogBtn').addEventListener('click', async () => {
-      const title = document.getElementById('blogTitleInput').value.trim();
-      const content = document.getElementById('blogContentInput').value.trim();
-      const label = document.getElementById('blogLabelInput').value;
-      
-      if(!title || !content) { showError("Bitte Titel und Text eingeben."); return; }
-      
-      const btn = document.getElementById('saveBlogBtn');
-      btn.disabled = true; btn.innerText = 'Wird gespeichert...';
-      
-      try {
-          if (currentEditBlogId) {
-              await updateDoc(doc(db, 'blog', currentEditBlogId), {
-                  title, content, label, updatedAt: serverTimestamp()
-              });
-          } else {
-              await addDoc(collection(db, 'blog'), {
-                  title, content, label, createdAt: serverTimestamp(),
-                  userId: currentUserUid, userName: currentUserName
-              });
-          }
-          document.getElementById('blogModal').classList.add('hidden');
-      } catch(e) { showError("Fehler beim Speichern des Beitrags."); }
-      finally { btn.disabled = false; btn.innerText = 'Posten'; }
-  });
-
-  window.deleteBlogPost = async function(docId) {
-     if(!currentUserUid) return;
-     try { await deleteDoc(doc(db, 'blog', docId)); } catch(e) { showError("Konnte Beitrag nicht löschen."); }
-  };
-
-  function listenToGroupBeers() {
-      if (!currentUserUid || !currentThemeId) return;
-
-      loadingIndicator.classList.remove('hidden');
-      beerListEl.innerHTML = '';
-      emptyState.classList.add('hidden');
-
-      const beersRef = collection(db, 'beers');
-      const q = query(beersRef);
-
-      if (unsubscribeSnapshot) unsubscribeSnapshot();
-
-      unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
-          loadingIndicator.classList.add('hidden');
-          beers = [];
-          snapshot.forEach(doc => {
-              beers.push({ id: doc.id, ...doc.data() });
-          });
-          beers.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
-          renderBeers();
-      }, (error) => {
-          loadingIndicator.classList.add('hidden');
-          showError("Fehler beim Laden der Biere.");
-      });
-  }
-
-  function getBeerColor(value) {
-      if(value <= 2) return "#fef08a"; // Hellgelb
-      if(value <= 4) return "#fcd34d"; // Goldgelb
-      if(value <= 6) return "#f59e0b"; // Bernstein
-      if(value <= 8) return "#b45309"; // Dunkelbraun
-      return "#451a03"; // Fast Schwarz
-  }
-
-  function renderChips(arr, cssClass) {
-      if(!arr || arr.length === 0) return '<span class="text-xs text-slate-500">- Keine -</span>';
-      return arr.map(a => `<span class="inline-block px-2 py-1 rounded-md text-[10px] font-bold mr-1 mb-1 ${cssClass}">${a}</span>`).join('');
-  }
-
-  function getEtikettText(val) {
-      val = parseFloat(val);
-      if(val === 0) return "Neues Kreativteam bitte!";
-      if(val === 2.5) return "Boa, echt jetz?";
-      if(val === 5.0) return "Hat der Prakti gut gemacht";
-      if(val === 7.5) return "Sehr originell";
-      if(val === 10.0) return "Feuchter Traum der GL";
-      return "";
-  }
-
-  function renderBeers() {
-      let filteredBeers = beers.filter(b => b.themeId === currentThemeId);
-      
-      if (filterMyBeers) {
-          filteredBeers = filteredBeers.filter(b => b.userId === currentUserUid);
-      }
-      
-      if (currentSearchQuery) {
-          let searchPool = filterMyBeers ? beers.filter(b => b.userId === currentUserUid) : beers;
-          
-          filteredBeers = searchPool.filter(b => {
-              const themeObj = themes.find(t => t.id === b.themeId);
-              const themeName = themeObj ? themeObj.name : '';
-              
-              const searchString = `
-                ${b.name || ''} ${b.brewery || ''} ${b.type || ''} ${b.userName || ''} ${themeName}
-              `.toLowerCase();
-              
-              let dateStr = "";
-              if(b.createdAt) {
-                  dateStr = b.createdAt.toDate().toLocaleDateString('de-DE');
-              }
-              return searchString.includes(currentSearchQuery) || dateStr.includes(currentSearchQuery);
-          });
-      }
-
-      document.getElementById('totalBeersCount').innerText = filteredBeers.length;
-      
-      if (filteredBeers.length === 0) {
-          emptyState.classList.remove('hidden'); beerListEl.innerHTML = ''; return;
-      }
-      
-      emptyState.classList.add('hidden');
-      beerListEl.innerHTML = '';
-
-      filteredBeers.forEach((beer) => {
-          let dateStr = "Gerade eben";
-          if (beer.createdAt) {
-              const date = beer.createdAt.toDate();
-              dateStr = date.toLocaleDateString('de-DE', {day: '2-digit', month: '2-digit', year: 'numeric'}) + ', ' + date.toLocaleTimeString('de-DE', {hour: '2-digit', minute:'2-digit'}) + ' Uhr';
-          }
-
-          const isMyPost = beer.userId === currentUserUid;
-          let rawNote = parseFloat(beer.gesamtnote);
-          if(isNaN(rawNote)) rawNote = 3.0;
-          const note = rawNote.toFixed(1);
-          
-          let noteColor = "var(--accent)";
-          if(rawNote <= 1.5) noteColor = "#10b981";
-          else if(rawNote <= 2.5) noteColor = "#34d399";
-          else if(rawNote <= 3.5) noteColor = "#facc15";
-          else if(rawNote <= 4.5) noteColor = "#fb923c";
-          else noteColor = "#ef4444";
-          
-          let aromaArr = []; let hopfenArr = [];
-          try { aromaArr = JSON.parse(beer.aromas || "[]"); } catch(e){}
-          try { hopfenArr = JSON.parse(beer.hopfen || "[]"); } catch(e){}
-
-          const beerColor = getBeerColor(beer.farbe || 5.5);
-          const gefaessText = beer.gefaess || "Flasche";
-          const etikettText = getEtikettText(beer.etikett || 5);
-          
-          const themeObj = themes.find(t => t.id === beer.themeId);
-          const themeFlagName = themeObj ? themeObj.name : 'Gelöschtes Thema';
-
-          const card = document.createElement('div');
-          card.className = 'beer-card relative overflow-hidden';
-          card.innerHTML = `
-              <div class="absolute top-0 right-0 font-bold text-xl px-4 py-3 rounded-bl-2xl shadow-md z-10" style="background-color: ${noteColor}; color: #0f172a;">
-                  ${note}
-              </div>
-              
-              <div class="card-header pr-20 relative z-0">
-                  <div class="w-full">
-                      <span class="text-[10px] font-bold px-2 py-0.5 rounded border mb-2 inline-block flex items-center gap-1 w-max" style="border-color: var(--accent); color: var(--accent); background: rgba(125,211,252,0.1);"><i class="ph ph-folder"></i> ${themeFlagName}</span>
-                      <div class="rater-name mb-1"><i class="ph ph-user"></i> ${beer.userName}</div>
-                      <h3 class="font-bold text-xl leading-tight m-0 text-white">${beer.name || 'Ohne Name'}</h3>
-                      <p class="text-sm text-slate-400 mt-1">
-                        ${beer.brewery ? beer.brewery + ' • ' : ''}
-                        ${beer.type ? beer.type : 'Unbekannt'}
-                        ${beer.alkohol ? ' • ' + beer.alkohol + '%' : ''}
-                      </p>
-                  </div>
-              </div>
-              
-              <button onclick="toggleDetails('${beer.id}')" class="w-full mt-2 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-bold flex justify-center items-center gap-2 transition-colors" style="color: var(--accent);">
-                  <span id="text-details-${beer.id}">Details zeigen</span>
-                  <span id="icon-details-${beer.id}" class="transition-transform duration-300"><i class="ph ph-caret-down"></i></span>
-              </button>
-
-              <div id="details-${beer.id}" class="hidden mt-4 transition-all">
-                  <div class="grid grid-cols-3 gap-3 text-sm text-center mb-3">
-                      <div class="bg-slate-800/60 p-2 rounded-lg border border-slate-700/50 flex flex-col items-center">
-                          <div class="text-[10px] text-slate-400 uppercase mb-1">Farbe</div>
-                          <div class="w-6 h-6 rounded-full border border-slate-500 shadow-sm" style="background-color: ${beerColor}"></div>
-                      </div>
-                      <div class="bg-slate-800/60 p-2 rounded-lg border border-slate-700/50 flex flex-col items-center justify-center">
-                          <div class="text-[10px] text-slate-400 uppercase mb-1">Trübung</div>
-                          <div class="text-slate-200 font-bold text-lg">${beer.truebung || '-'}</div>
-                      </div>
-                      <div class="bg-slate-800/60 p-2 rounded-lg border border-slate-700/50 flex flex-col items-center justify-center">
-                          <div class="text-[10px] text-slate-400 uppercase mb-1">Schaum</div>
-                          <div class="text-slate-200 font-bold text-lg">${beer.schaum || '-'}</div>
-                      </div>
-                  </div>
-
-                  <div class="grid grid-cols-2 gap-3 text-sm text-center mb-3">
-                      <div class="bg-slate-800/60 p-2 rounded-lg border border-slate-700/50 flex flex-col items-center justify-center">
-                          <div class="text-[10px] text-slate-400 uppercase mb-1">Gefäß</div>
-                          <div class="text-slate-200 font-bold text-sm">${gefaessText}</div>
-                      </div>
-                      <div class="bg-slate-800/60 p-2 rounded-lg border border-slate-700/50 flex flex-col items-center justify-center">
-                          <div class="text-[10px] text-slate-400 uppercase mb-1">Etikett</div>
-                          <div class="text-slate-200 font-bold text-[10px] leading-tight">${etikettText}</div>
-                      </div>
-                  </div>
-
-                  <div class="mt-3 bg-slate-800/60 p-2 rounded-lg border border-slate-700/50">
-                      <div class="text-[10px] text-slate-400 uppercase mb-1">Aromen & Geschmack</div>
-                      <div class="mb-1">${renderChips(aromaArr, 'bg-sky-900/40 text-sky-300 border border-sky-700/50')}</div>
-                      <div>${renderChips(hopfenArr, 'bg-emerald-900/40 text-emerald-300 border border-emerald-700/50')}</div>
-                  </div>
-                  
-                  ${beer.notes ? `<div class="mt-3 p-3 bg-slate-900/50 rounded-lg border-l-2" style="border-color: var(--accent);"><p class="text-sm text-slate-300 italic">"${beer.notes}"</p></div>` : ''}
-              </div>
-              
-              <div class="mt-4 pt-3 border-t border-slate-700 flex justify-between items-center">
-                  <div class="text-xs text-slate-500">${dateStr}</div>
-                  <div class="flex gap-3">
-                      ${isMyPost ? `<button onclick="editBeer('${beer.id}')" class="hover:text-white text-sm font-bold" style="color: var(--accent);"><i class="ph ph-pencil-simple"></i> Ändern</button>` : ''}
-                      ${isMyPost ? `<button onclick="deleteBeer('${beer.id}')" class="text-slate-500 hover:text-red-500 text-sm font-bold"><i class="ph ph-trash"></i> Löschen</button>` : ''}
-                  </div>
-              </div>
-          `;
-          beerListEl.appendChild(card);
-      });
-  }
-
-  window.toggleDetails = function(id) {
-      const detailsEl = document.getElementById(`details-${id}`);
-      const textEl = document.getElementById(`text-details-${id}`);
-      const iconEl = document.getElementById(`icon-details-${id}`);
-      if(detailsEl.classList.contains('hidden')) {
-          detailsEl.classList.remove('hidden'); textEl.innerText = "Details ausblenden"; iconEl.style.transform = "rotate(180deg)";
-      } else {
-          detailsEl.classList.add('hidden'); textEl.innerText = "Details zeigen"; iconEl.style.transform = "rotate(0deg)";
-      }
-  };
-
-  document.getElementById('beerForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      if (!currentUserUid) return;
-      if (!currentThemeId) { showError("Bitte wähle zuerst oben ein Thema."); return; }
-
-      const saveBtn = document.getElementById('saveBtn');
-      saveBtn.disabled = true; saveBtn.innerHTML = "Wird gespeichert... ⏳";
-
-      let rawNote = parseFloat(document.getElementById('gesamtnoteInput').value);
-      if(isNaN(rawNote)) rawNote = 3.0;
-
-      const beerData = {
-          themeId: currentThemeId,
-          name: document.getElementById('beerName').value,
-          brewery: document.getElementById('brewery').value,
-          type: document.getElementById('type').value,
-          alkohol: document.getElementById('alkohol').value,
-          gefaess: document.getElementById('gefaessInput').value,
-          farbe: parseFloat(document.getElementById('farbeInput').value),
-          truebung: parseFloat(document.getElementById('truebungInput').value),
-          schaum: parseFloat(document.getElementById('schaumInput').value),
-          etikett: parseFloat(document.getElementById('etikettInput').value),
-          kohlensaeure: document.getElementById('kohlensaeureInput').value,
-          geruchIntensitaet: document.getElementById('geruchIntensitaetInput').value,
-          geruchBalance: document.getElementById('geruchBalanceInput').value,
-          aromas: document.getElementById('aromaInput').value,
-          geschmackIntensitaet: document.getElementById('geschmackIntensitaetInput').value,
-          geschmackBalance: document.getElementById('geschmackBalanceInput').value,
-          hopfen: document.getElementById('hopfenInput').value,
-          nachLaenge: document.getElementById('nachLaengeInput').value,
-          nachIntensitaet: document.getElementById('nachIntensitaetInput').value,
-          nachBalance: document.getElementById('nachBalanceInput').value,
-          eindruckGeschmack: document.getElementById('eindruckGeschmackInput').value,
-          persGeschmack: document.getElementById('persGeschmackInput').value,
-          frische: document.getElementById('frischeInput').value,
-          kater: document.getElementById('katerInput').value,
-          gesamtnote: rawNote,
-          notes: document.getElementById('notes').value,
-          userName: currentUserName,
-          userId: currentUserUid
-      };
-
-      try {
-          if (currentEditBeerId) {
-              await updateDoc(doc(db, 'beers', currentEditBeerId), beerData);
-          } else {
-              beerData.createdAt = serverTimestamp();
-              await addDoc(collection(db, 'beers'), beerData);
-          }
-          resetFormToDefault();
-          showView('list');
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-      } catch (error) { showError("Fehler beim Speichern."); }
-      finally { saveBtn.disabled = false; saveBtn.innerHTML = '<i class="ph ph-check-circle"></i> Bewertung abschließen'; }
-  });
-
-  window.deleteBeer = async function(docId) {
-     if(!currentUserUid) return;
-     try { await deleteDoc(doc(db, 'beers', docId)); } catch(e) { showError("Konnte Eintrag nicht löschen."); }
-  };
-
-  window.editBeer = function(id) {
-      const beer = beers.find(b => b.id === id);
-      if(!beer) return;
-      currentEditBeerId = id;
-      
-      document.getElementById('beerName').value = beer.name || '';
-      document.getElementById('brewery').value = beer.brewery || '';
-      document.getElementById('type').value = beer.type || '';
-      document.getElementById('alkohol').value = beer.alkohol || '';
-      document.getElementById('notes').value = beer.notes || '';
-
-      const setInput = (key, val) => { if(val !== undefined && document.getElementById(key)) document.getElementById(key).value = val; };
-      const updateSliderDisplay = (id) => {
-          if(document.getElementById(id) && document.getElementById(id.replace('Input', 'ValueDisplay'))) {
-              document.getElementById(id.replace('Input', 'ValueDisplay')).innerText = document.getElementById(id).value;
-          }
-      };
-      
-      setInput('farbeInput', beer.farbe || 5.5); updateSliderDisplay('farbeInput');
-      setInput('truebungInput', beer.truebung || 5.5); updateSliderDisplay('truebungInput');
-      setInput('schaumInput', beer.schaum || 5.5); updateSliderDisplay('schaumInput');
-      setInput('etikettInput', beer.etikett || 5); document.getElementById('etikettTextDisplay').innerText = getEtikettText(beer.etikett || 5);
-      
-      setInput('gefaessInput', beer.gefaess || 'Flasche');
-      setInput('kohlensaeureInput', beer.kohlensaeure); setInput('geruchIntensitaetInput', beer.geruchIntensitaet);
-      setInput('geruchBalanceInput', beer.geruchBalance); setInput('aromaInput', beer.aromas);
-      setInput('geschmackIntensitaetInput', beer.geschmackIntensitaet); setInput('geschmackBalanceInput', beer.geschmackBalance);
-      setInput('hopfenInput', beer.hopfen); setInput('nachLaengeInput', beer.nachLaenge);
-      setInput('nachIntensitaetInput', beer.nachIntensitaet); setInput('nachBalanceInput', beer.nachBalance);
-      setInput('eindruckGeschmackInput', beer.eindruckGeschmack); setInput('persGeschmackInput', beer.persGeschmack);
-      setInput('frischeInput', beer.frische); setInput('katerInput', beer.kater); 
-      
-      let rawNote = parseFloat(beer.gesamtnote);
-      if(isNaN(rawNote)) rawNote = 3.0;
-      setInput('gesamtnoteInput', rawNote.toFixed(1));
-
-      updateUIFromInputs();
-      document.getElementById('saveBtn').innerHTML = '<i class="ph ph-floppy-disk"></i> Änderungen speichern';
-      showView('form');
-  };
-
-  function resetFormToDefault() {
-      document.getElementById('beerForm').reset();
-      document.getElementById('farbeInput').value = "5.5"; document.getElementById('farbeValueDisplay').innerText = "5.5";
-      document.getElementById('truebungInput').value = "5.5"; document.getElementById('truebungValueDisplay').innerText = "5.5";
-      document.getElementById('schaumInput').value = "5.5"; document.getElementById('schaumValueDisplay').innerText = "5.5";
-      document.getElementById('etikettInput').value = "5"; document.getElementById('etikettTextDisplay').innerText = "Hat der Prakti gut gemacht (5)";
-      document.getElementById('gefaessInput').value = "Flasche";
-      document.getElementById('kohlensaeureInput').value = "Spritzig"; document.getElementById('geruchIntensitaetInput').value = "Mittel";
-      document.getElementById('geruchBalanceInput').value = "Mittel"; document.getElementById('aromaInput').value = "[]";
-      document.getElementById('geschmackIntensitaetInput').value = "Mittel"; document.getElementById('geschmackBalanceInput').value = "Was dazwischen";
-      document.getElementById('hopfenInput').value = "[]"; document.getElementById('nachLaengeInput').value = "Mittel";
-      document.getElementById('nachIntensitaetInput').value = "Mittel"; document.getElementById('nachBalanceInput').value = "Mittel";
-      document.getElementById('eindruckGeschmackInput').value = "Mittel"; document.getElementById('persGeschmackInput').value = "Mag ich";
-      document.getElementById('frischeInput').value = "Frisch"; document.getElementById('katerInput').value = "Niemals";
-      document.getElementById('gesamtnoteInput').value = "3.0";
-      currentEditBeerId = null;
-      document.getElementById('saveBtn').innerHTML = '<i class="ph ph-check-circle"></i> Bewertung abschließen';
-      updateUIFromInputs();
-  }
-
-  document.getElementById('navAdd').addEventListener('click', () => {
-      if(currentEditBeerId) resetFormToDefault();
-      showView('form');
-  });
-
-  function updateUIFromInputs() {
-      document.querySelectorAll('.segmented-control').forEach(container => {
-          const val = document.getElementById(container.dataset.target).value;
-          container.querySelectorAll('.segment').forEach(seg => {
-              if (seg.dataset.val == val) seg.classList.add('active'); else seg.classList.remove('active');
-          });
-      });
-      document.querySelectorAll('.chip-container').forEach(container => {
-          let valArr = [];
-          try { valArr = JSON.parse(document.getElementById(container.dataset.target).value); } catch(e){}
-          container.querySelectorAll('.chip').forEach(chip => {
-              if (valArr.includes(chip.dataset.val)) chip.classList.add('active'); else chip.classList.remove('active');
-          });
-      });
-      const noteVal = parseFloat(document.getElementById('gesamtnoteInput').value).toFixed(1);
-      document.querySelectorAll('.grade-btn').forEach(btn => {
-          if (btn.dataset.val === noteVal) {
-              btn.classList.add('active'); btn.style.backgroundColor = btn.dataset.color; btn.style.color = '#0f172a'; btn.style.transform = 'scale(1.1)';
-          } else {
-              btn.classList.remove('active'); btn.style.backgroundColor = ''; btn.style.color = ''; btn.style.transform = '';
-          }
-      });
-  }
-
-  function setupSegmentedControls() {
-      document.querySelectorAll('.segmented-control').forEach(container => {
-          const input = document.getElementById(container.dataset.target);
-          const segments = container.querySelectorAll('.segment');
-          segments.forEach(seg => {
-              seg.addEventListener('click', () => {
-                  segments.forEach(s => s.classList.remove('active')); seg.classList.add('active'); input.value = seg.dataset.val;
-              });
-          });
-      });
-  }
-
-  function setupChips() {
-      document.querySelectorAll('.chip-container').forEach(container => {
-          const input = document.getElementById(container.dataset.target);
-          const chips = container.querySelectorAll('.chip');
-          chips.forEach(chip => {
-              chip.addEventListener('click', () => {
-                  chip.classList.toggle('active');
-                  const activeChips = Array.from(container.querySelectorAll('.chip.active')).map(c => c.dataset.val);
-                  input.value = JSON.stringify(activeChips);
-              });
-          });
-      });
-  }
-
-  function generateGradeButtons() {
-      const container = document.getElementById('grade-buttons');
-      container.innerHTML = '';
-      const grades = [
-          {v: '1.0', c: '#10b981'}, {v: '1.5', c: '#059669'}, {v: '2.0', c: '#34d399'},
-          {v: '2.5', c: '#a3e635'}, {v: '3.0', c: '#facc15'}, {v: '3.5', c: '#eab308'},
-          {v: '4.0', c: '#fb923c'}, {v: '4.5', c: '#f97316'}, {v: '5.0', c: '#ef4444'},
-          {v: '5.5', c: '#dc2626'}, {v: '6.0', c: '#991b1b'}
-      ];
-      
-      grades.forEach(g => {
-          const btn = document.createElement('div');
-          btn.className = 'grade-btn';
-          btn.dataset.val = g.v;
-          btn.dataset.color = g.c;
-          btn.innerText = g.v;
-          
-          if(g.v === '3.0') {
-             btn.classList.add('active');
-             btn.style.backgroundColor = g.c;
-             btn.style.color = '#0f172a';
-             btn.style.transform = 'scale(1.1)';
-          }
-          container.appendChild(btn);
-      });
-      setupGrades();
-  }
-
-  function setupGrades() {
-      const gradeBtns = document.querySelectorAll('.grade-btn');
-      const gradeInput = document.getElementById('gesamtnoteInput');
-      gradeBtns.forEach(btn => {
-          btn.addEventListener('click', () => {
-               gradeBtns.forEach(b => { b.classList.remove('active'); b.style.backgroundColor = ''; b.style.color = ''; b.style.transform = ''; });
-               btn.classList.add('active'); btn.style.backgroundColor = btn.dataset.color; btn.style.color = '#0f172a'; btn.style.transform = 'scale(1.1)';
-               gradeInput.value = btn.dataset.val;
-          });
-      });
-  }
-
-  function setupSliders() {
-      ['farbe', 'truebung', 'schaum'].forEach(prefix => {
-          const input = document.getElementById(prefix + 'Input');
-          const display = document.getElementById(prefix + 'ValueDisplay');
-          if(input && display) {
-              input.addEventListener('input', (e) => { display.innerText = e.target.value; });
-          }
-      });
-      
-      const etikettInput = document.getElementById('etikettInput');
-      const etikettDisplay = document.getElementById('etikettTextDisplay');
-      if(etikettInput && etikettDisplay) {
-          etikettInput.addEventListener('input', (e) => {
-              etikettDisplay.innerText = getEtikettText(e.target.value) + ` (${e.target.value})`;
-          });
-      }
-  }
-
-  generateGradeButtons();
-  setupSliders();
-  setupSegmentedControls();
-  setupChips();
-  initFirebase();
-
-</script>
+
+    <!-- PROFIL MODAL -->
+    <div id="profileModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Mein Profil</h2>
+                <button class="close-modal" id="closeProfileModal"><i class="ph ph-x"></i></button>
+            </div>
+            <div id="profileAccordionContainer"></div>
+            <button id="logoutBtn" class="btn-danger" style="margin-top: 30px;"><i class="ph ph-sign-out"></i> Abmelden</button>
+        </div>
+    </div>
+
+    <!-- RANKING MODAL -->
+    <div id="rankingModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="ph ph-trophy" style="color: gold;"></i> Top 3 - <span id="rankingThemeTitle"></span></h2>
+                <button class="close-modal" id="closeRankingModal"><i class="ph ph-x"></i></button>
+            </div>
+            <div id="rankingList"></div>
+        </div>
+    </div>
+
+    <!-- BIER HINZUFÜGEN MODAL -->
+    <div id="addModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Bier eintragen</h2>
+                <button class="close-modal" id="closeAddModal"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="form-group">
+                <label>Biername</label>
+                <input type="text" id="beerName" placeholder="z.B. Pelforth Blonde">
+            </div>
+            <div class="form-group">
+                <label>Gefäß</label>
+                <div class="chip-group" id="containerChips">
+                    <div class="chip active" data-val="Flasche">Flasche</div>
+                    <div class="chip" data-val="Dose">Dose</div>
+                    <div class="chip" data-val="Glas">Glas</div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Gesamteindruck (0-10)</label>
+                <div class="slider-container">
+                    <input type="range" id="impressionSlider" min="0" max="10" value="5">
+                    <div id="sliderText">5 - Ganz okay</div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Schulnote (1.0 - 6.0)</label>
+                <select id="gradeSelect">
+                    <option value="1.0">1.0 - Überragend</option>
+                    <option value="1.5">1.5</option>
+                    <option value="2.0">2.0 - Gut</option>
+                    <option value="2.5">2.5</option>
+                    <option value="3.0">3.0 - Befriedigend</option>
+                    <option value="3.5">3.5</option>
+                    <option value="4.0">4.0 - Ausreichend</option>
+                    <option value="4.5">4.5</option>
+                    <option value="5.0">5.0 - Mangelhaft</option>
+                    <option value="5.5">5.5</option>
+                    <option value="6.0">6.0 - Ungenügend</option>
+                </select>
+            </div>
+            <button id="saveBeerBtn" class="btn-primary" style="margin-top: 20px;"><i class="ph ph-check"></i> Speichern</button>
+        </div>
+    </div>
+
+    <!-- EDIT MODAL (Bearbeiten) -->
+    <div id="editModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Bier bearbeiten</h2>
+                <button class="close-modal" id="closeEditModal"><i class="ph ph-x"></i></button>
+            </div>
+            <input type="hidden" id="editDocId">
+            <div class="form-group">
+                <label>Biername</label>
+                <input type="text" id="editBeerName">
+            </div>
+            <div class="form-group">
+                <label>Gesamteindruck (0-10)</label>
+                <div class="slider-container">
+                    <input type="range" id="editImpressionSlider" min="0" max="10">
+                    <div id="editSliderText">5 - Ganz okay</div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Schulnote (1.0 - 6.0)</label>
+                <select id="editGradeSelect">
+                    <option value="1.0">1.0 - Überragend</option>
+                    <option value="1.5">1.5</option>
+                    <option value="2.0">2.0 - Gut</option>
+                    <option value="2.5">2.5</option>
+                    <option value="3.0">3.0 - Befriedigend</option>
+                    <option value="3.5">3.5</option>
+                    <option value="4.0">4.0 - Ausreichend</option>
+                    <option value="4.5">4.5</option>
+                    <option value="5.0">5.0 - Mangelhaft</option>
+                    <option value="5.5">5.5</option>
+                    <option value="6.0">6.0 - Ungenügend</option>
+                </select>
+            </div>
+            <button id="updateBeerBtn" class="btn-primary" style="margin-top: 20px;"><i class="ph ph-check"></i> Aktualisieren</button>
+            <button id="deleteBeerBtn" class="btn-danger" style="margin-top: 10px;"><i class="ph ph-trash"></i> Eintrag löschen</button>
+        </div>
+    </div>
+
+    <!-- FIREBASE LOGIK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, getDoc, setDoc, query, orderBy, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        // ==========================================
+        // HIER DEINEN FIREBASE SCHLÜSSEL EINFÜGEN!
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "DEIN_API_KEY",
+            authDomain: "DEIN_PROJEKT.firebaseapp.com",
+            projectId: "DEIN_PROJEKT",
+            storageBucket: "DEIN_PROJEKT.appspot.com",
+            messagingSenderId: "DEINE_ID",
+            appId: "DEINE_APP_ID"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let isAdmin = false; 
+        let currentFilter = 'all'; 
+
+        const sliderTexts = {
+            0: "0 - Spülwasser", 1: "1 - Kaum trinkbar", 2: "2 - Eher nicht", 3: "3 - Unterer Durchschnitt",
+            4: "4 - Trinkbar", 5: "5 - Ganz okay", 6: "6 - Solide", 7: "7 - Lecker",
+            8: "8 - Sehr stark", 9: "9 - Herausragend", 10: "10 - Feuchter Traum der GL"
+        };
+
+        const impressionSlider = document.getElementById('impressionSlider');
+        const sliderText = document.getElementById('sliderText');
+        impressionSlider.addEventListener('input', (e) => {
+            sliderText.innerText = sliderTexts[e.target.value];
+        });
+
+        const editImpressionSlider = document.getElementById('editImpressionSlider');
+        const editSliderText = document.getElementById('editSliderText');
+        editImpressionSlider.addEventListener('input', (e) => {
+            editSliderText.innerText = sliderTexts[e.target.value];
+        });
+
+        let selectedContainer = "Flasche";
+        document.querySelectorAll('#containerChips .chip').forEach(chip => {
+            chip.addEventListener('click', (e) => {
+                document.querySelectorAll('#containerChips .chip').forEach(c => c.classList.remove('active'));
+                e.target.classList.add('active');
+                selectedContainer = e.target.getAttribute('data-val');
+            });
+        });
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                const userDocRef = doc(db, "users", user.uid);
+                const userDoc = await getDoc(userDocRef);
+                
+                if (userDoc.exists()) {
+                    if (userDoc.data().approved === true) {
+                        isAdmin = userDoc.data().isAdmin === true; 
+                        document.getElementById('headerUserName').innerText = user.email.split('@')[0];
+                        showScreen('mainApp');
+                        loadBeers();
+                    } else {
+                        showScreen('waitScreen');
+                    }
+                } else {
+                    await setDoc(userDocRef, { email: user.email, approved: false, isAdmin: false });
+                    showScreen('waitScreen');
+                }
+            } else {
+                showScreen('loginScreen');
+            }
+        });
+
+        document.getElementById('authForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('authError');
+            
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                errorMsg.style.display = 'none';
+            } catch (error) {
+                if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+                    try {
+                        await createUserWithEmailAndPassword(auth, email, password);
+                        errorMsg.style.display = 'none';
+                    } catch (regError) {
+                        errorMsg.innerText = "Fehler: " + regError.message;
+                        errorMsg.style.display = 'block';
+                    }
+                } else {
+                    errorMsg.innerText = "Fehler: " + error.message;
+                    errorMsg.style.display = 'block';
+                }
+            }
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
+        document.getElementById('waitLogoutBtn').addEventListener('click', () => signOut(auth));
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        async function loadBeers() {
+            const feed = document.getElementById('feed');
+            feed.innerHTML = '<p style="text-align:center;">Lade Biere...</p>';
+            
+            const q = query(collection(db, "beers"), orderBy("timestamp", "desc"));
+            const querySnapshot = await getDocs(q);
+            
+            let html = '';
+            const selectedTheme = document.getElementById('mainThemeSelect').value;
+
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                if(data.theme !== selectedTheme) return;
+                if(currentFilter === 'mine' && data.userId !== currentUser.uid) return;
+
+                const gradeClass = "grade-" + Math.floor(parseFloat(data.grade));
+
+                // Der Stift wird für den Besitzer ODER für den Admin eingeblendet!
+                const canEdit = (data.userId === currentUser.uid) || isAdmin;
+                const editBtnHtml = canEdit ? `<button class="edit-btn" data-id="${doc.id}" data-name="${data.name}" data-impression="${data.impression}" data-grade="${data.grade}"><i class="ph ph-pencil-simple"></i></button>` : '';
+
+                html += `
+                    <div class="beer-card">
+                        <div class="beer-header">
+                            <div class="beer-name">${data.name} ${editBtnHtml}</div>
+                            <div class="theme-badge">${data.theme}</div>
+                        </div>
+                        <div class="beer-meta">
+                            <span><i class="ph ph-user"></i> ${data.userName}</span>
+                            <span><i class="ph ph-beer-bottle"></i> ${data.container}</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="color:var(--accent-blue); font-size:14px;">Eindruck: ${data.impression}/10</span>
+                            <div class="beer-grade ${gradeClass}">${data.grade}</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            feed.innerHTML = html === '' ? '<p style="text-align:center; color:#666;">Noch keine Biere für dieses Thema!</p>' : html;
+        }
+
+        document.getElementById('saveBeerBtn').addEventListener('click', async () => {
+            const nameField = document.getElementById('beerName');
+            const name = nameField.value.trim();
+            const theme = document.getElementById('mainThemeSelect').value;
+            const impression = document.getElementById('impressionSlider').value;
+            const grade = document.getElementById('gradeSelect').value;
+
+            if(!name) { 
+                nameField.style.border = "2px solid var(--danger)"; 
+                return; 
+            }
+            nameField.style.border = "1px solid #444";
+
+            await addDoc(collection(db, "beers"), {
+                name: name,
+                theme: theme,
+                container: selectedContainer,
+                impression: impression,
+                grade: grade,
+                userId: currentUser.uid,
+                userName: currentUser.email.split('@')[0],
+                timestamp: new Date()
+            });
+
+            document.getElementById('addModal').classList.remove('active');
+            nameField.value = '';
+            loadBeers();
+        });
+
+        // Event-Delegation für die dynamisch erzeugten Stift-Buttons im Feed
+        document.getElementById('feed').addEventListener('click', (e) => {
+            const editBtn = e.target.closest('.edit-btn');
+            if(editBtn) {
+                const id = editBtn.getAttribute('data-id');
+                const name = editBtn.getAttribute('data-name');
+                const impression = editBtn.getAttribute('data-impression');
+                const grade = editBtn.getAttribute('data-grade');
+                
+                document.getElementById('editDocId').value = id;
+                document.getElementById('editBeerName').value = name;
+                document.getElementById('editImpressionSlider').value = impression;
+                document.getElementById('editSliderText').innerText = sliderTexts[impression] || "Kein Eindruck gewählt";
+                document.getElementById('editGradeSelect').value = grade;
+                
+                document.getElementById('editModal').classList.add('active');
+            }
+        });
+
+        document.getElementById('updateBeerBtn').addEventListener('click', async () => {
+            const id = document.getElementById('editDocId').value;
+            const nameField = document.getElementById('editBeerName');
+            const newName = nameField.value.trim();
+            const newImpression = document.getElementById('editImpressionSlider').value;
+            const newGrade = document.getElementById('editGradeSelect').value;
+
+            if(!newName) { 
+                nameField.style.border = "2px solid var(--danger)"; 
+                return; 
+            }
+            nameField.style.border = "1px solid #444";
+            
+            const btn = document.getElementById('updateBeerBtn');
+            btn.innerHTML = '<i class="ph ph-spinner"></i> Speichere...';
+
+            try {
+                const beerRef = doc(db, "beers", id);
+                await updateDoc(beerRef, {
+                    name: newName,
+                    impression: newImpression,
+                    grade: newGrade
+                });
+                document.getElementById('editModal').classList.remove('active');
+                loadBeers(); 
+            } catch (err) {
+                console.error("Fehler beim Update:", err);
+            } finally {
+                btn.innerHTML = '<i class="ph ph-check"></i> Aktualisieren';
+            }
+        });
+
+        let deleteConfirmTimeout;
+        document.getElementById('deleteBeerBtn').addEventListener('click', async (e) => {
+            const btn = e.target.closest('button');
+            if (btn.innerText.includes('Sicher?')) {
+                const id = document.getElementById('editDocId').value;
+                await deleteDoc(doc(db, "beers", id));
+                document.getElementById('editModal').classList.remove('active');
+                loadBeers();
+                btn.innerHTML = '<i class="ph ph-trash"></i> Eintrag löschen';
+                clearTimeout(deleteConfirmTimeout);
+            } else {
+                btn.innerHTML = '<i class="ph ph-warning"></i> Sicher? Klicke nochmal';
+                deleteConfirmTimeout = setTimeout(() => {
+                    btn.innerHTML = '<i class="ph ph-trash"></i> Eintrag löschen';
+                }, 3000);
+            }
+        });
+
+        async function loadProfile() {
+            const container = document.getElementById('profileAccordionContainer');
+            container.innerHTML = '<p>Lade Historie...</p>';
+
+            const q = query(collection(db, "beers"), orderBy("timestamp", "desc"));
+            const snapshot = await getDocs(q);
+            
+            const myBeers = [];
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                if(data.userId === currentUser.uid) myBeers.push(data);
+            });
+
+            if(myBeers.length === 0) {
+                container.innerHTML = '<p>Du hast noch keine Biere bewertet.</p>';
+                return;
+            }
+
+            const groupedByTheme = myBeers.reduce((acc, beer) => {
+                if (!acc[beer.theme]) acc[beer.theme] = [];
+                acc[beer.theme].push(beer);
+                return acc;
+            }, {});
+
+            let html = '';
+            for (const [themeName, beers] of Object.entries(groupedByTheme)) {
+                html += `
+                    <button class="accordion">${themeName} (${beers.length} Biere) <i class="ph ph-caret-down"></i></button>
+                    <div class="panel">
+                        <ul style="list-style:none; padding:10px 0; margin:0;">
+                            ${beers.map(b => `<li style="padding:8px 0; border-bottom:1px solid #333; display:flex; justify-content:space-between;"><span>${b.name}</span><strong class="grade-${Math.floor(parseFloat(b.grade))}">${b.grade}</strong></li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+
+            const accBtns = container.querySelectorAll('.accordion');
+            accBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    this.classList.toggle("active");
+                    const panel = this.nextElementSibling;
+                    if (panel.style.display === "block") {
+                        panel.style.display = "none";
+                    } else {
+                        panel.style.display = "block";
+                    }
+                });
+            });
+        }
+
+        async function calculateRanking() {
+            const theme = document.getElementById('mainThemeSelect').value;
+            document.getElementById('rankingThemeTitle').innerText = theme;
+            const list = document.getElementById('rankingList');
+            list.innerHTML = '<p style="text-align:center;">Berechne Auswertung...</p>';
+            
+            const q = query(collection(db, "beers"));
+            const snapshot = await getDocs(q);
+            
+            const beers = {};
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                if(data.theme === theme) {
+                    const standardName = data.name.trim().toLowerCase();
+                    if(!beers[standardName]) beers[standardName] = { name: data.name, grades: [] };
+                    beers[standardName].grades.push(parseFloat(data.grade));
+                }
+            });
+
+            const ranked = Object.values(beers).map(b => {
+                const avg = b.grades.reduce((sum, val) => sum + val, 0) / b.grades.length;
+                return { name: b.name, avg: avg, count: b.grades.length };
+            });
+
+            ranked.sort((a, b) => a.avg - b.avg);
+
+            if(ranked.length === 0) {
+                list.innerHTML = '<p style="text-align:center;">Noch keine Daten für dieses Thema.</p>';
+                return;
+            }
+
+            let html = '';
+            const medals = ['🥇', '🥈', '🥉'];
+            
+            ranked.slice(0, 3).forEach((beer, index) => {
+                html += `
+                    <div style="background:#2a2a2a; margin-bottom:10px; padding:15px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+                        <div style="font-size:18px;">
+                            <span style="font-size:24px; margin-right:10px;">${medals[index]}</span>
+                            <strong>${beer.name}</strong>
+                            <div style="font-size:12px; color:#888; margin-top:5px; margin-left:40px;">Basiert auf ${beer.count} Bewertung(en)</div>
+                        </div>
+                        <div style="font-size:24px; font-weight:bold; color:var(--accent-blue);">
+                            Ø ${beer.avg.toFixed(2)}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            list.innerHTML = html;
+        }
+
+        document.getElementById('mainThemeSelect').addEventListener('change', loadBeers);
+        
+        document.getElementById('btnFilterAll').addEventListener('click', (e) => {
+            currentFilter = 'all';
+            e.target.classList.add('active');
+            document.getElementById('btnFilterMine').classList.remove('active');
+            loadBeers();
+        });
+        
+        document.getElementById('btnFilterMine').addEventListener('click', (e) => {
+            currentFilter = 'mine';
+            e.target.classList.add('active');
+            document.getElementById('btnFilterAll').classList.remove('active');
+            loadBeers();
+        });
+
+        document.getElementById('addBeerFab').addEventListener('click', () => document.getElementById('addModal').classList.add('active'));
+        document.getElementById('closeAddModal').addEventListener('click', () => document.getElementById('addModal').classList.remove('active'));
+        document.getElementById('closeEditModal').addEventListener('click', () => document.getElementById('editModal').classList.remove('active'));
+        
+        document.getElementById('profileBtn').addEventListener('click', () => {
+            loadProfile();
+            document.getElementById('profileModal').classList.add('active');
+        });
+        document.getElementById('closeProfileModal').addEventListener('click', () => document.getElementById('profileModal').classList.remove('active'));
+
+        document.getElementById('btnRanking').addEventListener('click', () => {
+            calculateRanking();
+            document.getElementById('rankingModal').classList.add('active');
+        });
+        document.getElementById('closeRankingModal').addEventListener('click', () => document.getElementById('rankingModal').classList.remove('active'));
+
+    </script>
 </body>
 </html>
