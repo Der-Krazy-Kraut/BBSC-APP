@@ -109,6 +109,7 @@
         <div class="auth-container">
             <img src="Logo_BBSC_DD_2024_3.png" alt="Logo" style="height: 80px; margin-bottom: 20px;" onerror="this.style.display='none'">
             <h2>BBSC Login</h2>
+            <!-- novalidate eingefügt, um Chrome-Autofill-Probleme zu umgehen -->
             <form id="authForm" novalidate>
                 <input type="email" id="email" placeholder="E-Mail" required>
                 <input type="password" id="password" placeholder="Passwort (min. 6 Zeichen)" required>
@@ -272,16 +273,16 @@
         import { getFirestore, collection, addDoc, getDocs, doc, getDoc, setDoc, query, orderBy, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         // ==========================================
-        // HIER DEINEN FIREBASE SCHLÜSSEL EINFÜGEN!
+        // WICHTIG: HIER DEINE ECHTEN FIREBASE DATEN EINTRAGEN!
         // ==========================================
-    const firebaseConfig = {
-          apiKey: "AIzaSyB2bye9GBhZ_p1gs4qLvIxGemoR9RKYcPc",
-          authDomain: "biertasting-bbsc.firebaseapp.com",
-          projectId: "biertasting-bbsc",
-          storageBucket: "biertasting-bbsc.firebasestorage.app",
-          messagingSenderId: "547730661062",
-          appId: "1:547730661062:web:ac340d8467ffe5323d41c7"
-        };
+       const firebaseConfig = {
+  apiKey: "AIzaSyB2bye9GBhZ_p1gs4qLvIxGemoR9RKYcPc",
+  authDomain: "biertasting-bbsc.firebaseapp.com",
+  projectId: "biertasting-bbsc",
+  storageBucket: "biertasting-bbsc.firebasestorage.app",
+  messagingSenderId: "547730661062",
+  appId: "1:547730661062:web:ac340d8467ffe5323d41c7"
+};
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
