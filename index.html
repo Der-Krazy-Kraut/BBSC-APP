@@ -901,6 +901,7 @@ const firebaseConfig = {
   let app, db, auth;
   let currentUserUid = null;
   let currentUserName = "";
+  let isUserAdmin = false; // NEU: Variable für den Admin-Status
   let isLoginMode = true;
   
   let beers = [];
@@ -978,6 +979,7 @@ const firebaseConfig = {
                           name: user.displayName,
                           email: user.email,
                           approved: false,
+                          isAdmin: false,
                           createdAt: serverTimestamp()
                       });
                       document.getElementById('approvalModal').classList.remove('hidden');
@@ -985,6 +987,7 @@ const firebaseConfig = {
                   } else if (userDoc.data().approved === true) {
                       currentUserUid = user.uid;
                       currentUserName = user.displayName;
+                      isUserAdmin = userDoc.data().isAdmin === true; // NEU: Liest Admin-Status aus Datenbank
                       displayUserName.innerText = currentUserName;
                       loginModal.classList.add('hidden');
                       document.getElementById('approvalModal').classList.add('hidden');
@@ -998,6 +1001,7 @@ const firebaseConfig = {
               } else if (!user) {
                   currentUserUid = null;
                   currentUserName = "";
+                  isUserAdmin = false;
                   loginModal.classList.remove('hidden');
                   document.getElementById('approvalModal').classList.add('hidden');
                   listView.classList.add('hidden');
@@ -1379,7 +1383,8 @@ const firebaseConfig = {
               editStr = `<span class="italic">(Bearbeitet: ${editDate.toLocaleDateString('de-DE')} ${editDate.toLocaleTimeString('de-DE', {hour: '2-digit', minute:'2-digit'})})</span>`;
           }
 
-          const isMyPost = post.userId === currentUserUid;
+          // NEU: Darf bearbeiten, wenn Besitzer ODER Admin
+          const canEdit = post.userId === currentUserUid || isUserAdmin;
           const labelColor = post.label === 'Wichtig' ? 'bg-red-500/20 text-red-400 border-red-500/50' : 'bg-slate-700 text-[var(--accent)] border-slate-600';
 
           const card = document.createElement('div');
@@ -1389,7 +1394,7 @@ const firebaseConfig = {
                   <div class="w-full">
                       <div class="flex justify-between items-start">
                           <span class="text-[10px] font-bold px-2 py-0.5 rounded border ${labelColor} mb-2 inline-block">${post.label || 'Info'}</span>
-                          ${isMyPost ? `
+                          ${canEdit ? `
                             <div class="flex gap-2">
                               <button onclick="editBlogPost('${post.id}')" class="text-slate-500 hover:text-[var(--accent)] p-1 text-sm"><i class="ph ph-pencil-simple"></i></button>
                               <button onclick="deleteBlogPost('${post.id}')" class="text-slate-500 hover:text-red-500 p-1 text-sm"><i class="ph ph-trash"></i></button>
@@ -1551,7 +1556,9 @@ const firebaseConfig = {
               dateStr = date.toLocaleDateString('de-DE', {day: '2-digit', month: '2-digit', year: 'numeric'}) + ', ' + date.toLocaleTimeString('de-DE', {hour: '2-digit', minute:'2-digit'}) + ' Uhr';
           }
 
-          const isMyPost = beer.userId === currentUserUid;
+          // NEU: Prüfen, ob man Editieren/Löschen darf (Besitzer ODER Admin)
+          const canEdit = beer.userId === currentUserUid || isUserAdmin;
+          
           let rawNote = parseFloat(beer.gesamtnote);
           if(isNaN(rawNote)) rawNote = 3.0;
           const note = rawNote.toFixed(1);
@@ -1638,8 +1645,8 @@ const firebaseConfig = {
               <div class="mt-4 pt-3 border-t border-slate-700 flex justify-between items-center">
                   <div class="text-xs text-slate-500">${dateStr}</div>
                   <div class="flex gap-3">
-                      ${isMyPost ? `<button onclick="editBeer('${beer.id}')" class="hover:text-white text-sm font-bold" style="color: var(--accent);"><i class="ph ph-pencil-simple"></i> Ändern</button>` : ''}
-                      ${isMyPost ? `<button onclick="deleteBeer('${beer.id}')" class="text-slate-500 hover:text-red-500 text-sm font-bold"><i class="ph ph-trash"></i> Löschen</button>` : ''}
+                      ${canEdit ? `<button onclick="editBeer('${beer.id}')" class="hover:text-white text-sm font-bold" style="color: var(--accent);"><i class="ph ph-pencil-simple"></i> Ändern</button>` : ''}
+                      ${canEdit ? `<button onclick="deleteBeer('${beer.id}')" class="text-slate-500 hover:text-red-500 text-sm font-bold"><i class="ph ph-trash"></i> Löschen</button>` : ''}
                   </div>
               </div>
           `;
@@ -1669,6 +1676,7 @@ const firebaseConfig = {
       let rawNote = parseFloat(document.getElementById('gesamtnoteInput').value);
       if(isNaN(rawNote)) rawNote = 3.0;
 
+      // NEU: userName und userId hier entfernt, damit sie beim Editieren nicht überschrieben werden
       const beerData = {
           themeId: currentThemeId,
           name: document.getElementById('beerName').value,
@@ -1695,15 +1703,16 @@ const firebaseConfig = {
           frische: document.getElementById('frischeInput').value,
           kater: document.getElementById('katerInput').value,
           gesamtnote: rawNote,
-          notes: document.getElementById('notes').value,
-          userName: currentUserName,
-          userId: currentUserUid
+          notes: document.getElementById('notes').value
       };
 
       try {
           if (currentEditBeerId) {
               await updateDoc(doc(db, 'beers', currentEditBeerId), beerData);
           } else {
+              // NEU: Name und ID werden NUR gesetzt, wenn das Bier frisch angelegt wird
+              beerData.userName = currentUserName;
+              beerData.userId = currentUserUid;
               beerData.createdAt = serverTimestamp();
               await addDoc(collection(db, 'beers'), beerData);
           }
